@@ -29,7 +29,7 @@ const server = new ApolloServer({
   // playground: false,
 });
 
-server.listen({ port: process.env.PORT || 4003 }).then((object) => {
+server.listen({ port: process.env.PORT || 4000 }).then((object) => {
   // console.log({ object });
   console.log(`Server running at ${object.url}`);
 });
