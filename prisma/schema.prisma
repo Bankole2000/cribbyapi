@@ -8,70 +8,155 @@ datasource db {
 }
 
 model Agent {
-  id         Int      @id @default(autoincrement())
-  uuid       String?  @default(uuid()) @db.Uuid
-  licenseUrl String?  @db.VarChar(255)
-  approved   Boolean  @default(false) @db.Boolean
-  user       User     @relation(fields: [userId], references: [id])
-  userId     Int
-  createdAt  DateTime @db.Timestamptz(6)
-  updatedAt  DateTime @db.Timestamptz(6)
+  id                   Int       @id @default(autoincrement())
+  uuid                 String?   @unique @default(uuid()) @db.Uuid
+  company              Company?  @relation(fields: [companyId], references: [id])
+  companyId            Int?
+  licenseUrl           String?   @db.VarChar(255)
+  licenseIsImage       Boolean?  @db.Boolean
+  licenseIsUpload      Boolean?  @db.Boolean
+  licenseFilePath      String?   @db.VarChar(255)
+  approved             Boolean?  @default(false) @db.Boolean
+  approvedAt           DateTime? @db.Timestamptz(6)
+  approvedBy           Support?  @relation(fields: [approvedById], references: [id])
+  approvedById         Int?
+  user                 User      @relation(fields: [userId], references: [id])
+  userId               Int
+  agentEmail           String?   @unique
+  agentPhone           String?
+  agentEmailIsVerified Boolean?  @default(false) @db.Boolean
+  agentPhoneIsVerified Boolean?  @default(false) @db.Boolean
+  rentals              Rental[]
+  createdAt            DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt
+}
 
+model Company {
+  id              Int      @id @default(autoincrement())
+  uuid            String?  @unique @default(uuid()) @db.Uuid
+  email           String   @unique
+  name            String   @db.VarChar(255)
+  websiteUrl      String   @db.VarChar(255)
+  address         String   @db.VarChar(255)
+  locationCity    String   @db.VarChar(255)
+  locationState   String   @db.VarChar(255)
+  locationCountry String   @db.VarChar(255)
+  phone           String   @db.VarChar(255)
+  agents          Agent[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Support {
+  id                   Int       @id @default(autoincrement())
+  uuid                 String    @unique @default(uuid()) @db.Uuid
+  agentApprovals       Agent[]
+  profileVerifications Profile[]
+  userData             User      @relation(fields: [userDataId], references: [id])
+  userDataId           Int
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+model Rental {
+  id          Int           @id @default(autoincrement())
+  uuid        String        @unique @default(uuid()) @db.Uuid
+  isPublished Boolean       @default(false) @db.Boolean
+  title       String        @db.VarChar(255)
+  shortDesc   String        @db.VarChar(255)
+  agent       Agent         @relation(fields: [agentId], references: [id])
+  agentId     Int
+  images      RentalImage[]
+  createdAt   DateTime      @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime      @updatedAt
+}
+
+model RentalImage {
+  id                 Int      @id @default(autoincrement())
+  imageIndex         Int      @db.Integer
+  uuid               String   @unique @default(uuid()) @db.Uuid
+  imageResizedUrl    String   @db.VarChar(255)
+  imageFullsizeUrl   String   @db.VarChar
+  imageResizedPath   String   @db.VarChar(255)
+  imageFullSizedPath String   @db.VarChar(255)
+  rental             Rental   @relation(fields: [rentalId], references: [id])
+  rentalId           Int
+  createdAt          DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt          DateTime @updatedAt
 }
 
 model User {
   id                     Int       @id @default(autoincrement())
-  uuid                   String?   @default(uuid()) @db.Uuid
-  email                  String?   @unique @db.VarChar(255)
+  uuid                   String?   @unique @default(uuid()) @db.Uuid
+  email                  String    @unique @db.VarChar(255)
   emailIsVerified        Boolean   @default(false) @db.Boolean
-  emailVerificationToken String    @db.VarChar(255)
+  emailVerificationToken String?   @db.Text
   dob                    DateTime  @db.Date
   tos                    Boolean   @default(false) @db.Boolean
-  gender                 String?   @db.VarChar(255)
+  gender                 String    @db.VarChar(255)
   username               String    @unique @db.VarChar(255)
   password               String?   @db.VarChar(255)
-  createdAt              DateTime  @db.Timestamptz(6)
-  updatedAt              DateTime  @db.Timestamptz(6)
+  roles                  Role[]    @db.Json
   profile                Profile?
   agentProfile           Agent?
   listings               Listing[]
   bookings               Booking[]
+  SupportProfile         Support?
+  createdAt              DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt              DateTime  @updatedAt
 }
 
 model Profile {
-  id                   Int     @id @default(autoincrement())
-  profileImageUrl      String? @db.VarChar(255)
-  profileImagePath     String? @db.VarChar(255)
-  identityCardImageUrl String? @db.VarChar(200)
-  identityVerified     Boolean @db.Boolean
-  firstname            String? @db.VarChar(255)
-  lastname             String? @db.VarChar(255)
-  phone                String? @db.VarChar(255)
-  bio                  String? @db.VarChar(255)
-  user                 User?   @relation(fields: [userId], references: [id])
-  userId               Int     @db.Integer
+  id                   Int      @id @default(autoincrement())
+  profileImageUrl      String?  @db.VarChar(255)
+  profileImagePath     String?  @db.VarChar(255)
+  identityCardImageUrl String?  @db.VarChar(200)
+  identityVerified     Boolean  @default(false) @db.Boolean
+  IdentityVerifiedBy   Support  @relation(fields: [IdentityVerifiedById], references: [id])
+  IdentityVerifiedById Int
+  IdentityVerifiedAt   DateTime @db.Timestamptz(6)
+  firstname            String?  @db.VarChar(255)
+  lastname             String?  @db.VarChar(255)
+  phone                String?  @db.VarChar(255)
+  bio                  String?  @db.VarChar(255)
+  user                 User?    @relation(fields: [userId], references: [id])
+  userId               Int      @db.Integer
+  createdAt            DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime @updatedAt
 }
 
 model Listing {
-  id       Int       @id @default(autoincrement())
-  uuid     String    @default(uuid()) @db.Uuid
-  owner    User      @relation(fields: [ownerId], references: [id])
-  ownerId  Int
-  bookings Booking[]
+  id          Int            @id @default(autoincrement())
+  uuid        String         @unique @default(uuid()) @db.Uuid
+  owner       User           @relation(fields: [ownerId], references: [id])
+  ownerId     Int
+  images      ListingImage[]
+  bookings    Booking[]
+  ispublished Boolean        @default(false) @db.Boolean
+  createdAt   DateTime       @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime       @updatedAt
 }
 
 model ListingImage {
-  id    Int @id @default(autoincrement())
+  id    Int    @id @default(autoincrement())
+  uuid  String @default(uuid()) @db.Uuid
   index Int
+
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
+  Listing   Listing? @relation(fields: [listingId], references: [id])
+  listingId Int?
 }
 
 model Booking {
-  id        Int     @id @default(autoincrement())
-  uuid      String  @default(uuid()) @db.Uuid
-  listing   Listing @relation(fields: [listingId], references: [id])
+  id        Int      @id @default(autoincrement())
+  uuid      String   @unique @default(uuid()) @db.Uuid
+  listing   Listing  @relation(fields: [listingId], references: [id])
   listingId Int
-  guest     User    @relation(fields: [guestId], references: [id])
+  guest     User     @relation(fields: [guestId], references: [id])
   guestId   Int
+  createdAt DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt DateTime @updatedAt
 }
 
 enum Role {
