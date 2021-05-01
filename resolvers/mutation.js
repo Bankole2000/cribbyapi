@@ -2,7 +2,12 @@ const authUtils = require("../utils/auth");
 const validators = require("../utils/validators");
 
 module.exports = {
-  signUp: async (parent, { credentials }, { dataSources }, info) => {
+  signUp: async (
+    parent,
+    { credentials },
+    { dataSources, res, pubsub },
+    info
+  ) => {
     const { email, password, username, dob, gender, tos } = credentials;
     // Check if user data is valid
     if (!validators.isEmail(email)) {
@@ -41,17 +46,30 @@ module.exports = {
     const hash = authUtils.hashPassword(userCredentials.password);
     userCredentials.hash = hash;
 
-    // Create user in db
-    const createdUser = await dataSources.userAPI.createUser(userCredentials);
+    userCredentials.roles = ["USER"];
 
+    userCredentials.email == "techybanky@gmail.com"
+      ? userCredentials.roles.push("ADMIN")
+      : "";
+
+    // Create user in db
+    console.log(userCredentials);
+    const createdUser = await dataSources.userAPI.createUser(userCredentials);
     // create token and send
-    const { roles, uuid, emailIsVerified } = createdUser;
+    const { roles, uuid, emailIsVerified, id } = createdUser;
     const token = authUtils.createToken({
       roles,
       uuid,
       emailIsVerified,
       username,
       email,
+      id,
+    });
+    console.log({ res, line: 57 });
+    res.cookie("cribbyToken", token, {
+      httpOnly: false,
+      sameSite: "none",
+      secure: true,
     });
     if (!emailIsVerified) {
       dataSources.userAPI
@@ -59,13 +77,19 @@ module.exports = {
         .then((data) => {
           // Send Verification Link to Email
           console.log("Verification Email Sent", { data });
+          pubsub.publish("USERSIGNEDUP", { userSignedUp: data });
         });
     }
     return { token, user: { email, uuid, username, roles, emailIsVerified } };
   },
-  signIn: async (parent, { credentials }, { dataSources }, info) => {
+  signIn: async (
+    parent,
+    { credentials },
+    { dataSources, req, res, pubsub },
+    info
+  ) => {
     let { email, password, username } = credentials;
-    console.log({ credentials });
+
     email = email ? email.toLowerCase() : null;
     username = username ? username : null;
     let signedInUser;
@@ -84,14 +108,32 @@ module.exports = {
       if (validPassword) {
         let { uuid } = existingUser;
         signedInUser = await dataSources.userAPI.getUserDetails(uuid);
-        let { roles, emailIsVerified, username, email } = signedInUser;
+        let { roles, emailIsVerified, username, email, id } = signedInUser;
         const token = authUtils.createToken({
           roles,
           uuid,
           emailIsVerified,
           username,
           email,
+          id,
         });
+        res.cookie("cribbyToken", token, {
+          httpOnly: false,
+          sameSite: "none",
+          secure: true,
+        });
+        // res.cookie("name", "tobi", {
+        //   domain: "http://localhost:5000",
+        //   path: "/page",
+        //   secure: true,
+        // });
+        // res.cookie(
+        //   "some_cross_domain_cookie",
+        //   "http://localhost:5500/page.html",
+        //   { domain: "http://localhost:5000" }
+        // );
+        console.log({ token, line: 118 });
+        pubsub.publish("USERLOGGEDIN", { userLoggedIn: signedInUser });
         return {
           token,
           user: signedInUser,
@@ -117,17 +159,27 @@ module.exports = {
       if (validPassword) {
         let { uuid } = existingUser;
         signedInUser = await dataSources.userAPI.getUserDetails(uuid);
-        let { roles, emailIsVerified, username, email } = signedInUser;
+        let { roles, emailIsVerified, username, email, id } = signedInUser;
+        console.log({ signedInUser });
         const token = authUtils.createToken({
           roles,
           uuid,
           emailIsVerified,
           username,
           email,
+          id,
         });
+
+        res.cookie("cribbyToken", token, {
+          httpOnly: false,
+          sameSite: "none",
+          secure: true,
+        });
+        console.log({ cookie: res.cookie.token, line: 149 });
+        pubsub.publish("USERLOGGEDIN", { userLoggedIn: signedInUser });
         return {
           token,
-          user: existingUser,
+          user: signedInUser,
         };
       } else {
         throw new Error("Incorrect Password");
@@ -135,6 +187,15 @@ module.exports = {
     }
 
     return dataSources;
+  },
+  signOut: async (parent, args, { dataSources, req, res }, info) => {
+    console.log({ res, line: 162 });
+
+    res.clearCookie("cribbyToken");
+    return {
+      token: null,
+      user: null,
+    };
   },
   deleteUser: async (parent, { uuid }, context, info) => {
     const userToDelete = await context.dataSources.userAPI.getUserByUUID(uuid);

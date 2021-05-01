@@ -101,7 +101,11 @@ model User {
   agentProfile           Agent?
   listings               Listing[]
   bookings               Booking[]
-  SupportProfile         Support?
+  contacts               Contact[]
+  favoriteListings       Json      @default("[]") @db.Json
+  favoriteRentals        Json      @default("[]") @db.Json
+  supportProfile         Support?
+  lastLogin              DateTime? @db.Timestamptz(6)
   createdAt              DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt              DateTime  @updatedAt
 }
@@ -135,6 +139,18 @@ model Listing {
   ispublished Boolean        @default(false) @db.Boolean
   createdAt   DateTime       @default(now()) @db.Timestamptz(6)
   updatedAt   DateTime       @updatedAt
+}
+
+model CohabitOffer {
+  id   Int    @id @default(autoincrement())
+  uuid String @unique @default(uuid()) @db.Uuid
+}
+
+model Contact {
+  id          Int    @id @default(autoincrement())
+  uuid        String @unique @default(uuid()) @db.Uuid
+  inviter     User   @relation(fields: [inviterUuid], references: [uuid])
+  inviterUuid String @db.Uuid
 }
 
 model ListingImage {

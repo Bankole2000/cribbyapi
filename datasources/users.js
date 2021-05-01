@@ -21,7 +21,7 @@ class UserAPI extends DataSource {
         email,
       },
     });
-    console.log({ email });
+    // console.log({ email, line: 24, file: "users.js" });
     return data;
   }
   async getUserByUsername(username) {
@@ -41,7 +41,7 @@ class UserAPI extends DataSource {
         include: {
           profile: true,
           agentProfile: true,
-          SupportProfile: true,
+          supportProfile: true,
           listings: true,
           bookings: true,
         },
@@ -59,7 +59,15 @@ class UserAPI extends DataSource {
     });
     return user;
   }
-  async createUser({ email, username, hash: password, dob, tos, gender }) {
+  async createUser({
+    email,
+    username,
+    hash: password,
+    dob,
+    tos,
+    gender,
+    roles,
+  }) {
     const user = await prisma.user.create({
       data: {
         email,
@@ -68,6 +76,12 @@ class UserAPI extends DataSource {
         dob,
         tos,
         gender,
+        roles,
+      },
+      include: {
+        profile: true,
+        supportProfile: true,
+        agentProfile: true,
       },
     });
     return user;

@@ -1,11 +1,17 @@
 const { gql } = require("apollo-server");
 
 module.exports = gql`
+  directive @requiresLogin on FIELD_DEFINITION
+  directive @requiresAdmin on FIELD_DEFINITION
+  directive @requiresSupport on FIELD_DEFINITION
+  directive @requiresOwnership on FIELD_DEFINITION
+
   type Query {
     """
     Get all users (Required Admin Access)
     """
-    allUsers: [User]
+    allUsers: [User] @requiresLogin
+    me: User
   }
 
   type Mutation {
@@ -15,6 +21,18 @@ module.exports = gql`
     signUp(credentials: UserInput): AuthPayload
     signIn(credentials: Credentials!): AuthPayload
     deleteUser(uuid: String!): User
+    signOut: AuthPayload
+  }
+
+  type Subscription {
+    favorites: FavoriteCount
+    userLoggedIn: User
+    userSignedUp: User
+  }
+
+  type FavoriteCount {
+    sessionId: ID
+    count: Int
   }
   """
   Base User ObjectType
@@ -75,7 +93,13 @@ module.exports = gql`
   """
   input UserInput {
     email: String!
+    """
+    Date of birth in format "YYYY-MM-DD". Must be above 18yrs to sign up
+    """
     dob: String!
+    """
+    Terms of Service acceptance - Must be true to to signup
+    """
     tos: Boolean!
     gender: String!
     username: String!
