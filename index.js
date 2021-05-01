@@ -46,15 +46,17 @@ const server = new ApolloServer({
       console.log("disconnected");
     },
     onConnect: (connectionParams, WebSocket, context) => {
-      const cookie = WebSocket.upgradeReq.headers.cookie.split(
-        "cribbyToken="
-      )[1];
-      console.log({ cookie });
-      const user = authUtil.verifyToken(cookie);
-      console.log(user);
+      if (WebSocket.upgradeReq.headers.cookie) {
+        const cookie = WebSocket.upgradeReq.headers.cookie.split(
+          "cribbyToken="
+        )[1];
+        console.log({ cookie });
+        const user = authUtil.verifyToken(cookie);
+        console.log(user);
 
-      console.log("ConnectedUser", user);
-      return { user }; // this is returned as context from the subscriptions object and is available in apollo-server context as connection.context
+        console.log("ConnectedUser", user);
+        return { user }; // this is returned as context from the subscriptions object and is available in apollo-server context as connection.context
+      }
     },
   },
   schemaDirectives: {
