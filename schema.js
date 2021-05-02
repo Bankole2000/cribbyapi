@@ -10,8 +10,9 @@ module.exports = gql`
     """
     Get all users (Required Admin Access)
     """
-    allUsers: [User] @requiresLogin
+    allUsers: [User]
     me: User
+    getHobbies(title: String, description: String, emoticon: String): [Hobby]
   }
 
   type Mutation {
@@ -19,9 +20,22 @@ module.exports = gql`
     Mutation to Signup Users
     """
     signUp(credentials: UserInput): AuthPayload
+    """
+    User sign in with username (or email) and password
+    """
     signIn(credentials: Credentials!): AuthPayload
     deleteUser(uuid: String!): User
     signOut: AuthPayload
+    """
+    Update Core user details - email, username, dob, gender - required login or ADMIN role
+    If user email changed, sets email verification status to false and sends verification token to new email address
+    """
+    updateUser(uuid: String!, updateData: UserUpdateInput): User
+    """
+    Update User profile details (firstname, lastname etc)
+    """
+    updateUserProfile(uuid: String, updateData: ProfileInput): User
+    createOrUpdateHobby(hobby: HobbyInput): Hobby
   }
 
   type Subscription {
@@ -62,17 +76,52 @@ module.exports = gql`
     roles: [Role]
     profile: Profile
     agentProfile: Agent
+    isOnline: Boolean
+    lastSeen: String
+    lastLogin: String
     listings: [Listing]
     bookings: [Booking]
     supportProfile: Support
     createdAt: String
     updatedAt: String
   }
+
+  input UserUpdateInput {
+    email: String
+    username: String
+    dob: String
+    gender: String
+  }
+
+  input ProfileInput {
+    uuid: String
+    firstname: String
+    lastname: String
+    phone: String
+    bio: String
+    hobbies: [HobbyInput]
+  }
+
+  type Hobby {
+    id: ID
+    uuid: String
+    title: String
+    description: String
+    emoticon: String
+  }
+
+  input HobbyInput {
+    id: ID
+    title: String!
+    description: String!
+    emoticon: String!
+  }
   """
   Basic Profile for User Object
   """
   type Profile {
     id: ID
+    uuid: String
     profileImageUrl: String
     profileImagePath: String
     identityCardImageUrl: String
@@ -82,9 +131,11 @@ module.exports = gql`
     firstname: String
     lastname: String
     phone: String
+    phoneIsVerified: Boolean
     bio: String
     user: User
     userId: Int
+    hobbies: [Hobby]
     createdAt: String
     updatedAt: String
   }

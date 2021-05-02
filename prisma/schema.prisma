@@ -97,6 +97,8 @@ model User {
   username               String    @unique @db.VarChar(255)
   password               String?   @db.VarChar(255)
   roles                  Role[]    @db.Json
+  isOnline               Boolean?  @default(false) @db.Boolean
+  lastSeen               DateTime? @default(now()) @db.Timestamptz(6)
   profile                Profile?
   agentProfile           Agent?
   listings               Listing[]
@@ -105,28 +107,46 @@ model User {
   favoriteListings       Json      @default("[]") @db.Json
   favoriteRentals        Json      @default("[]") @db.Json
   supportProfile         Support?
-  lastLogin              DateTime? @db.Timestamptz(6)
+  lastLogin              DateTime? @default(now()) @db.Timestamptz(6)
   createdAt              DateTime  @default(now()) @db.Timestamptz(6)
   updatedAt              DateTime  @updatedAt
 }
 
+model Hobby {
+  id          Int       @id @default(autoincrement())
+  uuid        String?   @unique @default(uuid()) @db.Uuid
+  title       String?   @db.VarChar(255)
+  description String?   @db.Text
+  profiles    Profile[]
+  emoticon    String?   @db.VarChar(255)
+  createdAt   DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt   DateTime  @updatedAt
+}
+
 model Profile {
-  id                   Int      @id @default(autoincrement())
-  profileImageUrl      String?  @db.VarChar(255)
-  profileImagePath     String?  @db.VarChar(255)
-  identityCardImageUrl String?  @db.VarChar(200)
-  identityVerified     Boolean  @default(false) @db.Boolean
-  IdentityVerifiedBy   Support  @relation(fields: [IdentityVerifiedById], references: [id])
-  IdentityVerifiedById Int
-  IdentityVerifiedAt   DateTime @db.Timestamptz(6)
-  firstname            String?  @db.VarChar(255)
-  lastname             String?  @db.VarChar(255)
-  phone                String?  @db.VarChar(255)
-  bio                  String?  @db.VarChar(255)
-  user                 User?    @relation(fields: [userId], references: [id])
-  userId               Int      @db.Integer
-  createdAt            DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt            DateTime @updatedAt
+  id                   Int       @id @default(autoincrement())
+  uuid                 String    @unique @default(uuid()) @db.Uuid
+  profileImageUrl      String?   @db.VarChar(255)
+  profileImagePath     String?   @db.VarChar(255)
+  identityCardImageUrl String?   @db.VarChar(200)
+  identityVerified     Boolean   @default(false) @db.Boolean
+  IdentityVerifiedBy   Support?  @relation(fields: [IdentityVerifiedById], references: [id])
+  IdentityVerifiedById Int?
+  IdentityVerifiedAt   DateTime? @db.Timestamptz(6)
+  firstname            String?   @db.VarChar(255)
+  lastname             String?   @db.VarChar(255)
+  phone                String?   @db.VarChar(255)
+  phoneIsVerified      Boolean?  @default(false) @db.Boolean
+  bio                  String?   @db.VarChar(255)
+  instagramHandle      String?   @db.VarChar(255)
+  twitterHandle        String?   @db.VarChar(255)
+  snapchatUrl          String?   @db.VarChar(255)
+  websiteUrl           String?   @db.VarChar(255)
+  hobbies              Hobby[]
+  user                 User?     @relation(fields: [userId], references: [id])
+  userId               Int       @db.Integer
+  createdAt            DateTime  @default(now()) @db.Timestamptz(6)
+  updatedAt            DateTime  @updatedAt
 }
 
 model Listing {

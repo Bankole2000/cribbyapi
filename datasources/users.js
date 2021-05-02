@@ -12,7 +12,15 @@ class UserAPI extends DataSource {
   initialize(config) {}
 
   async getAllUsers() {
-    const data = await prisma.user.findMany({});
+    const data = await prisma.user.findMany({
+      include: {
+        profile: true,
+        agentProfile: true,
+        supportProfile: true,
+        listings: true,
+        bookings: true,
+      },
+    });
     return data;
   }
   async getUserByEmail(email) {
@@ -21,7 +29,7 @@ class UserAPI extends DataSource {
         email,
       },
     });
-    // console.log({ email, line: 24, file: "users.js" });
+
     return data;
   }
   async getUserByUsername(username) {
@@ -52,12 +60,18 @@ class UserAPI extends DataSource {
     }
   }
   async getUserByUUID(uuid) {
-    const user = await prisma.user.findUnique({
-      where: {
-        uuid,
-      },
-    });
-    return user;
+    try {
+      const user = await prisma.user.findUnique({
+        where: {
+          uuid,
+        },
+      });
+      return user;
+    } catch (error) {
+      console.log({ error });
+      throw new Error("Couldn't get user with that UUID");
+      return false;
+    }
   }
   async createUser({
     email,
@@ -92,8 +106,67 @@ class UserAPI extends DataSource {
         uuid: data.uuid,
       },
       data,
+      include: {
+        profile: true,
+        agentProfile: true,
+        supportProfile: true,
+        listings: true,
+        bookings: true,
+      },
     });
     return updatedUser;
+  }
+  async updateUserProfile(data) {
+    const { updateData, uuid } = data;
+    const profileExists = await prisma.profile.findUnique({
+      where: {
+        uuid,
+      },
+    });
+    let updatedUser;
+    try {
+      if (profileExists) {
+        updatedUser = await prisma.user.update({
+          where: {
+            uuid,
+          },
+          data: {
+            profile: {
+              update: updateData,
+            },
+          },
+          include: {
+            profile: true,
+            agentProfile: true,
+            supportProfile: true,
+            listings: true,
+            bookings: true,
+          },
+        });
+        return updatedUser;
+      } else {
+        updatedUser = await prisma.user.update({
+          where: {
+            uuid,
+          },
+          data: {
+            profile: {
+              create: { ...updateData, uuid },
+            },
+          },
+          include: {
+            profile: true,
+            agentProfile: true,
+            supportProfile: true,
+            listings: true,
+            bookings: true,
+          },
+        });
+        return updatedUser;
+      }
+    } catch (err) {
+      console.log({ err, line: 114, file: "users.js" });
+    }
   }
   async deleteUser({ uuid }) {
     const deletedUser = await prisma.user.delete({
