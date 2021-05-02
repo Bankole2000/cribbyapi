@@ -74,7 +74,6 @@ const server = new ApolloServer({
     if (req && req.cookies.cribbyToken) {
       const payload = authUtil.verifyToken(req.cookies.cribbyToken);
       user = payload;
-      // console.log({ user, where: "From Context. Index.js line 23" });
     }
     return { user, req, res, pubsub };
   },
