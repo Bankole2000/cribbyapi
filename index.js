@@ -50,10 +50,7 @@ const server = new ApolloServer({
         const cookie = WebSocket.upgradeReq.headers.cookie.split(
           "cribbyToken="
         )[1];
-        console.log({ cookie });
         const user = authUtil.verifyToken(cookie);
-        console.log(user);
-
         console.log("ConnectedUser", user);
         return { user }; // this is returned as context from the subscriptions object and is available in apollo-server context as connection.context
       }
@@ -81,7 +78,6 @@ const server = new ApolloServer({
   playground: true,
   // debug: false,
   // formatError: (err) => {
-  //   console.log(err);
   //   if (err.extensions.code == "INTERNAL_SERVER_ERROR") {
   //     return new ApolloError("We're having some trouble", "ERROR", {
   //       token: "Unique Token for support ticket maybe",
@@ -103,7 +99,7 @@ httpServer.listen(process.env.PORT || 4000, () => {
   console.log(`Server running at ${process.env.PORT || PORT}`);
 });
 // } catch (err) {
-//   console.log(err);
+//
 // }
 
 app.get("/", (req, res) => {
