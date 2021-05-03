@@ -205,6 +205,7 @@ module.exports = {
   },
   deleteUser: async (parent, { uuid }, context, info) => {
     const userToDelete = await context.dataSources.userAPI.getUserByUUID(uuid);
+    // TODO: User with Listings that have active bookings cannot delete account
     if (!userToDelete) {
       throw new Error("No User with that UUID");
     }
@@ -343,11 +344,13 @@ module.exports = {
     if (updateData.bio && !validators.isNotEmpty(updateData.bio)) {
       throw new Error("Bio cannot be empty");
     }
+    console.log(updateData.hobbies);
 
     const updatedUser = await dataSources.userAPI.updateUserProfile({
       uuid,
       updateData,
     });
+
     if (!updatedUser.profile.phoneIsVerified) {
       // TODO: Verify Phone Number - Twillio API
     }

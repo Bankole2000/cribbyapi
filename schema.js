@@ -32,9 +32,13 @@ module.exports = gql`
     """
     updateUser(uuid: String!, updateData: UserUpdateInput): User
     """
-    Update User profile details (firstname, lastname etc)
+    Update User profile details (firstname, lastname, hobbies etc)
+    User must be logged in or have ADMIN role
     """
     updateUserProfile(uuid: String, updateData: ProfileInput): User
+    """
+    Create or Update Hobbies (add id field to update, exclude Id to create)
+    """
     createOrUpdateHobby(hobby: HobbyInput): Hobby
   }
 
@@ -73,6 +77,9 @@ module.exports = gql`
     Username - Unique Identifier for signup + login
     """
     username: String
+    """
+    Roles - Enum for access control
+    """
     roles: [Role]
     profile: Profile
     agentProfile: Agent
@@ -100,6 +107,11 @@ module.exports = gql`
     phone: String
     bio: String
     hobbies: [HobbyInput]
+    instagramHandle: String
+    twitterHandle: String
+    snapchatUrl: String
+    facebookUrl: String
+    websiteUrl: String
   }
 
   type Hobby {
@@ -108,6 +120,7 @@ module.exports = gql`
     title: String
     description: String
     emoticon: String
+    profiles: [Profile]
   }
 
   input HobbyInput {
@@ -133,6 +146,11 @@ module.exports = gql`
     phone: String
     phoneIsVerified: Boolean
     bio: String
+    instagramHandle: String
+    twitterHandle: String
+    snapchatUrl: String
+    facebookUrl: String
+    websiteUrl: String
     user: User
     userId: Int
     hobbies: [Hobby]

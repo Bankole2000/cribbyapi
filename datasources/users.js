@@ -47,7 +47,11 @@ class UserAPI extends DataSource {
           uuid,
         },
         include: {
-          profile: true,
+          profile: {
+            include: {
+              hobbies: true,
+            },
+          },
           agentProfile: true,
           supportProfile: true,
           listings: true,
@@ -64,6 +68,13 @@ class UserAPI extends DataSource {
       const user = await prisma.user.findUnique({
         where: {
           uuid,
+        },
+        include: {
+          profile: true,
+          agentProfile: true,
+          supportProfile: true,
+          listings: true,
+          bookings: true,
         },
       });
       return user;
@@ -118,6 +129,16 @@ class UserAPI extends DataSource {
   }
   async updateUserProfile(data) {
     const { updateData, uuid } = data;
+    let { hobbies } = updateData;
+    if (hobbies) {
+      hobbies = {
+        set: hobbies.map((hobby) => {
+          return { id: Number(hobby.id) };
+        }),
+      };
+      delete updateData.hobbies;
+    }
+    console.log(hobbies);
     const profileExists = await prisma.profile.findUnique({
       where: {
         uuid,
@@ -126,6 +147,16 @@ class UserAPI extends DataSource {
     let updatedUser;
     try {
       if (profileExists) {
+        if (hobbies) {
+          await prisma.profile.update({
+            where: {
+              uuid,
+            },
+            data: {
+              hobbies: { ...hobbies },
+            },
+          });
+        }
         updatedUser = await prisma.user.update({
           where: {
             uuid,
@@ -151,7 +182,11 @@ class UserAPI extends DataSource {
           },
           data: {
             profile: {
-              create: { ...updateData, uuid },
+              create: {
+                ...updateData,
+                uuid,
+                hobbies: { connect: hobbies.set },
+              },
             },
           },
           include: {
@@ -165,7 +200,7 @@ class UserAPI extends DataSource {
         return updatedUser;
       }
     } catch (err) {
-      console.log({ err, line: 114, file: "users.js" });
+      console.log({ err, line: 195, file: "users.js" });
     }
   }
   async deleteUser({ uuid }) {

@@ -141,6 +141,7 @@ model Profile {
   instagramHandle      String?   @db.VarChar(255)
   twitterHandle        String?   @db.VarChar(255)
   snapchatUrl          String?   @db.VarChar(255)
+  facebookUrl          String?   @db.VarChar(255)
   websiteUrl           String?   @db.VarChar(255)
   hobbies              Hobby[]
   user                 User?     @relation(fields: [userId], references: [id])

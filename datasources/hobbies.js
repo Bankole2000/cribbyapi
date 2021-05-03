@@ -12,7 +12,11 @@ class HobbiesAPI extends DataSource {
   initialize(config) {}
 
   async getHobbies(args) {
-    const hobbies = await prisma.hobby.findMany({});
+    const hobbies = await prisma.hobby.findMany({
+      include: {
+        profiles: true,
+      },
+    });
     return hobbies;
   }
 
