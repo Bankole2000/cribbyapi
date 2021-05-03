@@ -10,7 +10,6 @@ class RequiresLogin extends SchemaDirectiveVisitor {
       const context = args[2];
       const user = context.user;
       console.log({ field, details, args });
-      // if (!user.roles.includes("ADMIN")) {
       if (!user) {
         throw new AuthenticationError("You need to be logged in");
       }
@@ -56,7 +55,6 @@ class RequiresOwnership extends SchemaDirectiveVisitor {
       const context = args[2];
       const user = context.user;
       console.log({ field, details, args });
-      // if (!user.roles.includes("ADMIN")) {
       if (!user) {
         throw new AuthenticationError("Requires Resource Ownership");
       }
