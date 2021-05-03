@@ -1,5 +1,8 @@
+const { prisma } = require(".prisma/client");
 const authUtils = require("../utils/auth");
 const validators = require("../utils/validators");
+const { AuthenticationError } = require("apollo-server-express");
+const { update } = require("lodash");
 
 module.exports = {
   signUp: async (
@@ -107,7 +110,13 @@ module.exports = {
       );
       if (validPassword) {
         let { uuid } = existingUser;
-        signedInUser = await dataSources.userAPI.getUserDetails(uuid);
+        // signedInUser = await dataSources.userAPI.getUserDetails(uuid);
+        signedInUser = await dataSources.userAPI.updateUser({
+          uuid,
+          lastLogin: new Date(),
+          lastSeen: new Date(),
+          isOnline: true,
+        });
         let { roles, emailIsVerified, username, email, id } = signedInUser;
         const token = authUtils.createToken({
           roles,
@@ -122,17 +131,7 @@ module.exports = {
           sameSite: "none",
           secure: true,
         });
-        // res.cookie("name", "tobi", {
-        //   domain: "http://localhost:5000",
-        //   path: "/page",
-        //   secure: true,
-        // });
-        // res.cookie(
-        //   "some_cross_domain_cookie",
-        //   "http://localhost:5500/page.html",
-        //   { domain: "http://localhost:5000" }
-        // );
-        console.log({ token, line: 118 });
+
         pubsub.publish("USERLOGGEDIN", { userLoggedIn: signedInUser });
         return {
           token,
@@ -175,7 +174,7 @@ module.exports = {
           sameSite: "none",
           secure: true,
         });
-        console.log({ cookie: res.cookie.token, line: 149 });
+        console.log({ cookie: res.cookie.token, line: 175 });
         pubsub.publish("USERLOGGEDIN", { userLoggedIn: signedInUser });
         return {
           token,
@@ -188,9 +187,16 @@ module.exports = {
 
     return dataSources;
   },
-  signOut: async (parent, args, { dataSources, req, res }, info) => {
-    console.log({ res, line: 162 });
-
+  signOut: async (parent, args, { dataSources, req, res, user }, info) => {
+    console.log({ user, file: "mutation.js", line: 189 });
+    if (user) {
+      const { uuid } = user;
+      await dataSources.userAPI.updateUser({
+        uuid,
+        lastSeen: new Date(),
+        isOnline: false,
+      });
+    }
     res.clearCookie("cribbyToken");
     return {
       token: null,
@@ -199,9 +205,170 @@ module.exports = {
   },
   deleteUser: async (parent, { uuid }, context, info) => {
     const userToDelete = await context.dataSources.userAPI.getUserByUUID(uuid);
+    // TODO: User with Listings that have active bookings cannot delete account
     if (!userToDelete) {
       throw new Error("No User with that UUID");
     }
     return context.dataSources.userAPI.deleteUser({ uuid });
+  },
+  updateUser: async (
+    parent,
+    { uuid, updateData },
+    { dataSources, res, user },
+    info
+  ) => {
+    const userToUpdate = await dataSources.userAPI.getUserByUUID(uuid);
+    if (!userToUpdate) {
+      throw new Error("No user with that UUID");
+    }
+    const { email: newEmail, username, dob, gender } = updateData;
+    if (newEmail) {
+      if (!validators.isEmail(newEmail)) {
+        throw new Error("Invalid Email");
+      }
+      if (newEmail === userToUpdate.email) {
+        throw new Error("This is your current email!");
+      }
+      updateData.email = newEmail.toLowerCase();
+      const emailTaken = await dataSources.userAPI.getUserByEmail(
+        updateData.email
+      );
+      if (emailTaken) {
+        throw new Error("This email is already registered");
+      }
+      updateData.emailIsVerified = false;
+    }
+    if (username) {
+      if (!validators.isValidUsername(username)) {
+        throw new Error("Invalid Username");
+      }
+      if (username === userToUpdate.username) {
+        throw new Error("This is your current username!");
+      }
+      const usernameTaken = await dataSources.userAPI.getUserByEmail(
+        updateData.username
+      );
+      if (usernameTaken) {
+        throw new Error("Username is already taken");
+      }
+    }
+    if (dob) {
+      if (validators.isOfAge(dob) < 18) {
+        throw new Error("Must be above 18");
+      }
+    }
+    if (!user) {
+      throw new AuthenticationError("You need to be logged in to do this");
+    }
+    if (!(uuid === user.uuid) && !user.roles.includes("ADMIN")) {
+      throw new Error("Can't update - This is not your user profile");
+    }
+    const updatedUser = await dataSources.userAPI.updateUser({
+      uuid,
+      ...updateData,
+    });
+    const { roles, emailIsVerified, id } = updatedUser;
+    const token = authUtils.createToken({
+      roles,
+      uuid,
+      emailIsVerified,
+      username: updatedUser.username,
+      email: updatedUser.email,
+      id,
+    });
+    if (user.uuid === uuid) {
+      res.cookie("cribbyToken", token, {
+        httpOnly: false,
+        sameSite: "none",
+        secure: true,
+      });
+    }
+    if (!updatedUser.emailIsVerified) {
+      await dataSources.userAPI
+        .updateUser({ uuid: updatedUser.uuid, emailVerificationToken: token })
+        .then((data) => {
+          // TODO: Send user email Confirmation to new email address
+          console.log(data);
+        });
+    }
+    return updatedUser;
+  },
+  updateUserProfile: async (
+    parent,
+    { uuid, updateData },
+    { dataSources, user, res, req },
+    info
+  ) => {
+    const userToUpdate = await dataSources.userAPI.getUserByUUID(uuid);
+    if (!userToUpdate) {
+      throw new Error("No user with that UUID");
+    }
+    if (!user) {
+      throw new AuthenticationError("You need to be logged in to do this");
+    }
+    if (!(uuid === user.uuid) && !user.roles.includes("ADMIN")) {
+      throw new AuthenticationError(
+        "Can't update - This is not your user profile"
+      );
+    }
+    if (updateData.firstname && !validators.isValidName(updateData.firstname)) {
+      throw new Error(
+        "Invalid firstname - Must be letters only (hyphenated names allowed e.g John-Doe)"
+      );
+    }
+    if (updateData.lastname && !validators.isValidName(updateData.lastname)) {
+      throw new Error(
+        "Invalid lastname - Must be letters only (hyphenated names allowed e.g John-Doe)"
+      );
+    }
+    if (updateData.phone && !validators.isValidPhoneNumber(updateData.phone)) {
+      throw new Error(
+        "Invalid Phone number - Should be numbers only (- and + allowed)"
+      );
+    }
+
+    if (
+      userToUpdate.profile?.phone &&
+      updateData.phone === userToUpdate.profile?.phone
+    ) {
+      throw new Error("This is your current Phone Number");
+    }
+
+    if (updateData.phone) {
+      updateData.phoneIsVerified = false;
+    }
+
+    console.log(validators.isNotEmpty(updateData.bio), {
+      hasBio: Boolean(updateData.bio),
+    });
+    if (updateData.bio && !validators.isNotEmpty(updateData.bio)) {
+      throw new Error("Bio cannot be empty");
+    }
+    console.log(updateData.hobbies);
+
+    const updatedUser = await dataSources.userAPI.updateUserProfile({
+      uuid,
+      updateData,
+    });
+
+    if (!updatedUser.profile.phoneIsVerified) {
+      // TODO: Verify Phone Number - Twillio API
+    }
+
+    return updatedUser;
+  },
+  createOrUpdateHobby: async (
+    parent,
+    { hobby: hobbyData },
+    { dataSources },
+    info
+  ) => {
+    const { id, title, description, emoticon } = hobbyData;
+    const hobby = await dataSources.hobbyAPI.createHobby({
+      id,
+      data: { title, description, emoticon },
+    });
+
+    return hobby;
   },
 };
