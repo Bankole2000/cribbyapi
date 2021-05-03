@@ -22,7 +22,7 @@ app.use(cookieParser());
 
 const authUtil = require("./utils/auth");
 const UserAPI = require("./datasources/users");
-
+const HobbyAPI = require("./datasources/hobbies");
 const typeDefs = require("./schema");
 
 const resolvers = require("./resolvers");
@@ -35,6 +35,7 @@ const {
 
 const dataSources = () => ({
   userAPI: new UserAPI(),
+  hobbyAPI: new HobbyAPI(),
 });
 
 const server = new ApolloServer({
@@ -42,7 +43,22 @@ const server = new ApolloServer({
   resolvers,
   dataSources,
   subscriptions: {
-    onDisconnect: (webSocket, context) => {
+    onDisconnect: async (WebSocket, context) => {
+      if (WebSocket.upgradeReq.headers.cookie) {
+        const cookie = WebSocket.upgradeReq.headers.cookie.split(
+          "cribbyToken="
+        )[1];
+        const user = authUtil.verifyToken(cookie);
+        if (user) {
+          const { uuid } = user;
+          await dataSources.userAPI.updateUser({
+            uuid,
+            isOnline: false,
+            lastSeen: new Date(),
+          });
+        }
+      }
+      // console.log({ WebSocket, context });
       console.log("disconnected");
     },
     onConnect: (connectionParams, WebSocket, context) => {
@@ -95,7 +111,6 @@ server.installSubscriptionHandlers(httpServer);
 
 // try {
 httpServer.listen(process.env.PORT || 4000, () => {
-  // console.log({ object });
   console.log(`Server running at ${process.env.PORT || PORT}`);
 });
 // } catch (err) {
@@ -103,5 +118,9 @@ httpServer.listen(process.env.PORT || 4000, () => {
 // }
 
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "What'sup Rest" });
+  res.status(200).json({
+    message: "Welcome to the Cribby API",
+    graphQLRemote: "https://cribba-api.herokuapp.com/graphql",
+    graphQLLocal: "http://localhost:4000/graphql",
+  });
 });

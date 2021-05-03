@@ -10,4 +10,7 @@ module.exports = {
       user: undefined,
     };
   },
+  getHobbies: (parent, args, { dataSources }, info) => {
+    return dataSources.hobbyAPI.getHobbies(args);
+  },
 };
