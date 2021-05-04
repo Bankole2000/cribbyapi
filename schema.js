@@ -12,6 +12,9 @@ module.exports = gql`
     """
     allUsers: [User]
     me: User
+    allListings: [Listing]
+    allCurrencyCodes: [CurrencyCode]
+    currencyDetails(code: CurrencyCode): Currency
     getHobbies(title: String, description: String, emoticon: String): [Hobby]
   }
 
@@ -24,22 +27,27 @@ module.exports = gql`
     User sign in with username (or email) and password
     """
     signIn(credentials: Credentials!): AuthPayload
-    deleteUser(uuid: String!): User
+    deleteUser(userUUID: String!): User
     signOut: AuthPayload
     """
     Update Core user details - email, username, dob, gender - required login or ADMIN role
     If user email changed, sets email verification status to false and sends verification token to new email address
     """
-    updateUser(uuid: String!, updateData: UserUpdateInput): User
+    updateUser(userUUID: String!, updateData: UserUpdateInput): User
     """
     Update User profile details (firstname, lastname, hobbies etc)
     User must be logged in or have ADMIN role
     """
-    updateUserProfile(uuid: String, updateData: ProfileInput): User
+    updateUserProfile(userUUID: String, updateData: ProfileInput): User
+    addListing(listing: ListingInput): Listing @requiresLogin
+    updateListing(listingUUID: String, updateData: ListingInput): Listing
+      @requiresLogin
+    deleteListing(listingUUID: String): Listing @requiresLogin
+    toggleListingPublishedStatus(uuid: String): Listing
     """
-    Create or Update Hobbies (add id field to update, exclude Id to create)
+    Add or Update Hobbies (include ID (id) field to update, exclude to create)
     """
-    createOrUpdateHobby(hobby: HobbyInput): Hobby
+    addOrUpdateHobby(hobby: HobbyInput): Hobby
   }
 
   type Subscription {
@@ -279,13 +287,45 @@ module.exports = gql`
   type Listing {
     id: ID!
     uuid: String
+    title: String
+    shortDescription: String
+    longDescription: String
+    additionalRules: [String]
+    baseCurrency: Currency
+    basicPrice: Float
+    pricePerWeekend: Float
+    pricePerWeek: Float
+    pricePerMonth: Float
+    isPublished: Boolean
     owner: User
     ownerId: Int
     images: [ListingImage]
     bookings: [Booking]
-    isPublished: Boolean
     createdAt: String
     updatedAt: String
+  }
+
+  input ListingInput {
+    title: String!
+    shortDescription: String
+    longDescription: String
+    additionalRules: [String]
+    basicPrice: Float
+    pricePerWeekend: Float
+    pricePerWeek: Float
+    pricePerMonth: Float
+    houseRules: [HouseRule]
+  }
+
+  input HouseRule {
+    id: ID
+    uuid: String
+    title: String
+    shortDescription: String
+    longDescription: String
+    code: String
+    faIcon: String
+    mdiIcon: String
   }
 
   """
@@ -315,6 +355,27 @@ module.exports = gql`
     updatedAt: String
   }
 
+  input Credentials {
+    email: String
+    password: String
+    username: String
+  }
+
+  type AuthPayload {
+    token: String
+    user: User
+  }
+
+  type Currency {
+    symbol: String
+    name: String
+    pluralName: String
+    nativeSymbol: String
+    code: CurrencyCode
+    decimalDigits: Int
+    rounding: Int
+  }
+
   """
   Possible Roles available to users - Users can have multiple roles
   """
@@ -325,14 +386,160 @@ module.exports = gql`
     ADMIN
   }
 
-  input Credentials {
-    email: String
-    password: String
-    username: String
-  }
-
-  type AuthPayload {
-    token: String
-    user: User
+  enum CurrencyCode {
+    USD
+    AED
+    AFN
+    ALL
+    AMD
+    ANG
+    AOA
+    ARS
+    AUD
+    AWG
+    AZN
+    BAM
+    BBD
+    BDT
+    BGN
+    BHD
+    BIF
+    BMD
+    BND
+    BOB
+    BRL
+    BSD
+    BWP
+    BYR
+    BZD
+    CAD
+    CDF
+    CHF
+    CLP
+    CNY
+    COP
+    CRC
+    CVE
+    CZK
+    DJF
+    DKK
+    DOP
+    DZD
+    EEK
+    EGP
+    ERN
+    ETB
+    EUR
+    FJD
+    FKP
+    GBP
+    GEL
+    GHS
+    GIP
+    GMD
+    GNF
+    GTQ
+    GYD
+    HKD
+    HNL
+    HRK
+    HTG
+    HUF
+    IDR
+    ILS
+    INR
+    IQD
+    IRR
+    ISK
+    JMD
+    JOD
+    JPY
+    KES
+    KSG
+    KHR
+    KMF
+    KRW
+    KWD
+    KYD
+    KZT
+    LAK
+    LBP
+    LKR
+    LRD
+    LSL
+    LTL
+    LVL
+    LYD
+    MAD
+    MDL
+    MGA
+    MKD
+    MMK
+    MNT
+    MOP
+    MRO
+    MUR
+    MVR
+    MWK
+    MXN
+    MYR
+    MZN
+    NAD
+    NGN
+    NIO
+    NOK
+    NPR
+    NZD
+    OMR
+    PAB
+    PEN
+    PGK
+    PHP
+    PKR
+    PLN
+    PYG
+    QAR
+    RON
+    RSD
+    RUB
+    RWF
+    SAR
+    SBD
+    SCR
+    SDG
+    SEK
+    SGD
+    SHP
+    SLL
+    SOS
+    SRD
+    STD
+    SVC
+    SYP
+    SZL
+    THB
+    TJS
+    TND
+    TOP
+    TRY
+    TTD
+    TWD
+    TZS
+    UAH
+    UGX
+    UYU
+    UZS
+    VEF
+    VND
+    VUV
+    WST
+    XAF
+    XCD
+    XOF
+    XPF
+    YER
+    ZAR
+    ZMK
+    ZMW
   }
 `;

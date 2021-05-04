@@ -203,7 +203,7 @@ module.exports = {
       user: null,
     };
   },
-  deleteUser: async (parent, { uuid }, context, info) => {
+  deleteUser: async (parent, { userUUID: uuid }, context, info) => {
     const userToDelete = await context.dataSources.userAPI.getUserByUUID(uuid);
     // TODO: User with Listings that have active bookings cannot delete account
     if (!userToDelete) {
@@ -213,7 +213,7 @@ module.exports = {
   },
   updateUser: async (
     parent,
-    { uuid, updateData },
+    { userUUID: uuid, updateData },
     { dataSources, res, user },
     info
   ) => {
@@ -295,7 +295,7 @@ module.exports = {
   },
   updateUserProfile: async (
     parent,
-    { uuid, updateData },
+    { userUUID: uuid, updateData },
     { dataSources, user, res, req },
     info
   ) => {
@@ -338,10 +338,10 @@ module.exports = {
       updateData.phoneIsVerified = false;
     }
 
-    console.log(validators.isNotEmpty(updateData.bio), {
-      hasBio: Boolean(updateData.bio),
-    });
-    if (updateData.bio && !validators.isNotEmpty(updateData.bio)) {
+    if (
+      Object.keys(updateData).includes("bio") &&
+      !validators.isNotEmpty(updateData.bio)
+    ) {
       throw new Error("Bio cannot be empty");
     }
     console.log(updateData.hobbies);
@@ -357,7 +357,58 @@ module.exports = {
 
     return updatedUser;
   },
-  createOrUpdateHobby: async (
+  addListing: async (
+    parent,
+    { listing },
+    { dataSources, req, res, user },
+    info
+  ) => {
+    const { uuid } = user;
+    const newListing = dataSources.listingAPI.createListing({ uuid, listing });
+    return newListing;
+  },
+  updateListing: async (
+    parent,
+    { listingUUID: uuid, updateData },
+    { dataSources, user, res, req },
+    info
+  ) => {
+    const listingToUpdate = await dataSources.listingAPI.getListingByUUID(uuid);
+    if (!listingToUpdate) {
+      throw new Error("No Listing with that UUID");
+    }
+    if (
+      listingToUpdate.owner.uuid !== user.uuid &&
+      !user.roles.includes("ADMIN")
+    ) {
+      throw new AuthenticationError("You do not own this Listing");
+    }
+    if (
+      Object.keys(updateData).includes("title") &&
+      !validators.isNotEmpty(updateData.title)
+    ) {
+      throw new Error("Listing Title Cannot be empty");
+    }
+    const updatedListing = await dataSources.listingAPI.updateListing({
+      uuid,
+      updateData,
+    });
+    return updatedListing;
+  },
+  deleteListing: async (
+    parent,
+    { listingUUID: uuid },
+    { dataSources },
+    info
+  ) => {
+    const listingToDelete = await dataSources.listingAPI.getListingByUUID(uuid);
+    if (!listingToDelete) {
+      throw new Error("No Listing with this UUID");
+    }
+    const deletedListing = await dataSources.listingAPI.deleteListing(uuid);
+    return deletedListing;
+  },
+  addOrUpdateHobby: async (
     parent,
     { hobby: hobbyData },
     { dataSources },

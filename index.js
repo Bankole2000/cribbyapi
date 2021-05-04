@@ -23,6 +23,8 @@ app.use(cookieParser());
 const authUtil = require("./utils/auth");
 const UserAPI = require("./datasources/users");
 const HobbyAPI = require("./datasources/hobbies");
+const CurrencyAPI = require("./datasources/currencies");
+const ListingAPI = require("./datasources/listings");
 const typeDefs = require("./schema");
 
 const resolvers = require("./resolvers");
@@ -36,6 +38,8 @@ const {
 const dataSources = () => ({
   userAPI: new UserAPI(),
   hobbyAPI: new HobbyAPI(),
+  currencyAPI: new CurrencyAPI(),
+  listingAPI: new ListingAPI(),
 });
 
 const server = new ApolloServer({
