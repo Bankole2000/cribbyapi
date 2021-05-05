@@ -62,6 +62,15 @@
     "code": "AMD",
     "name_plural": "Armenian drams"
   },
+  "AOA": {
+    "symbol": "Kz",
+    "name": "Angolan Kwanza",
+    "symbol_native": "Kz",
+    "decimal_digits": 0,
+    "rounding": 0,
+    "code": "AOA",
+    "name_plural": "Angolan Kwanza"
+  },
   "ARS": {
     "symbol": "AR$",
     "name": "Argentine Peso",
@@ -80,6 +89,15 @@
     "code": "AUD",
     "name_plural": "Australian dollars"
   },
+  "AWG": {
+    "symbol": "ƒ",
+    "name": "Aruban Florin",
+    "code": "AWG",
+    "symbol_native": "ƒ",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "name_plural": "Aruban florin"
+  },
   "AZN": {
     "symbol": "man.",
     "name": "Azerbaijani Manat",
@@ -97,6 +115,15 @@
     "rounding": 0,
     "code": "BAM",
     "name_plural": "Bosnia-Herzegovina convertible marks"
+  },
+  "BBD": {
+    "symbol": "Bds$",
+    "name": "Barbados Dollar",
+    "symbol_native": "$",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "BBD",
+    "name_plural": "Barbados dollars"
   },
   "BDT": {
     "symbol": "Tk",
@@ -160,6 +187,15 @@
     "rounding": 0,
     "code": "BRL",
     "name_plural": "Brazilian reals"
+  },
+  "BSD": {
+    "symbol": "B$",
+    "name": "Bahamian Dollar",
+    "symbol_native": "$",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "BSD",
+    "name_plural": "Bahamian dollars"
   },
   "BWP": {
     "symbol": "BWP",
@@ -332,6 +368,24 @@
     "code": "ETB",
     "name_plural": "Ethiopian birrs"
   },
+  "FJD": {
+    "symbol": "FJ$",
+    "name": "Fiji Dollar",
+    "symbol_native": "$",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "FJD",
+    "name_plural": "Fiji dollars"
+  },
+  "FKP": {
+    "symbol": "£",
+    "name": "Falkland Islands Pound",
+    "symbol_native": "£",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "FKP",
+    "name_plural": "Falkland Islands pounds"
+  },
   "GBP": {
     "symbol": "£",
     "name": "British Pound Sterling",
@@ -359,6 +413,24 @@
     "code": "GHS",
     "name_plural": "Ghanaian cedis"
   },
+  "GIP": {
+    "symbol": "£",
+    "name": "Gibraltar Pound",
+    "symbol_native": "£",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "GIP",
+    "name_plural": "Gibraltar pounds"
+  },
+  "GMD": {
+    "symbol": "D",
+    "name": "Gambian Dalasi",
+    "symbol_native": "D",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "GMD",
+    "name_plural": "Gambian Dalasis"
+  },
   "GNF": {
     "symbol": "FG",
     "name": "Guinean Franc",
@@ -376,6 +448,15 @@
     "rounding": 0,
     "code": "GTQ",
     "name_plural": "Guatemalan quetzals"
+  },
+  "GYD": {
+    "symbol": "GY$",
+    "name": "Guyanese Dollar",
+    "symbol_native": "$",
+    "decimal_digits": 0,
+    "rounding": 0,
+    "code": "GYD",
+    "name_plural": "Guyanese dollars"
   },
   "HKD": {
     "symbol": "HK$",
@@ -403,6 +484,15 @@
     "rounding": 0,
     "code": "HRK",
     "name_plural": "Croatian kunas"
+  },
+  "HTG": {
+    "symbol": "G",
+    "name": "Haitian Gourde",
+    "symbol_native": "G",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "HTG",
+    "name_plural": "Haitian Gourdes"
   },
   "HUF": {
     "symbol": "Ft",
@@ -539,6 +629,15 @@
     "code": "KWD",
     "name_plural": "Kuwaiti dinars"
   },
+  "KYD": {
+    "symbol": "CI$",
+    "name": "Cayman Islands Dollar",
+    "symbol_native": "$",
+    "decimal_digits": 3,
+    "rounding": 0,
+    "code": "KYD",
+    "name_plural": "Cayman Islands dollars"
+  },
   "KZT": {
     "symbol": "KZT",
     "name": "Kazakhstani Tenge",
@@ -565,6 +664,15 @@
     "rounding": 0,
     "code": "LKR",
     "name_plural": "Sri Lankan rupees"
+  },
+  "LRD": {
+    "symbol": "L$",
+    "name": "Liberian Dollar",
+    "symbol_native": "$",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "LRD",
+    "name_plural": "Liberian dollars"
   },
   "LTL": {
     "symbol": "Lt",
@@ -638,6 +746,15 @@
     "code": "MMK",
     "name_plural": "Myanma kyats"
   },
+  "MNT": {
+    "symbol": "₮",
+    "name": "Mongolian Tögrög",
+    "symbol_native": "₮",
+    "decimal_digits": 0,
+    "rounding": 0,
+    "code": "MNT",
+    "name_plural": "Mongolian Tögrög"
+  },
   "MOP": {
     "symbol": "MOP$",
     "name": "Macanese Pataca",
@@ -655,6 +772,15 @@
     "rounding": 0,
     "code": "MUR",
     "name_plural": "Mauritian rupees"
+  },
+  "MWK": {
+    "symbol": "MK",
+    "name": "Malawian Kwacha",
+    "symbol_native": "MK",
+    "decimal_digits": 0,
+    "rounding": 0,
+    "code": "MWK",
+    "name_plural": "Malawian Kwachas"
   },
   "MXN": {
     "symbol": "MX$",
@@ -764,6 +890,15 @@
     "code": "PEN",
     "name_plural": "Peruvian nuevos soles"
   },
+  "PGK": {
+    "symbol": "K",
+    "name": "Papua New Guinean Kina",
+    "symbol_native": "K",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "PGK",
+    "name_plural": "Papua New Guinean kinas"
+  },
   "PHP": {
     "symbol": "₱",
     "name": "Philippine Peso",
@@ -854,6 +989,15 @@
     "code": "SAR",
     "name_plural": "Saudi riyals"
   },
+  "SBD": {
+    "symbol": "Si$",
+    "name": "Solomon Islands Dollar",
+    "symbol_native": "$",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "SBD",
+    "name_plural": "Solomon Islands dollars"
+  },
   "SDG": {
     "symbol": "SDG",
     "name": "Sudanese Pound",
@@ -881,6 +1025,24 @@
     "code": "SGD",
     "name_plural": "Singapore dollars"
   },
+  "SHP": {
+    "symbol": "£",
+    "name": "Saint Helena Pound",
+    "symbol_native": "£",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "SHP",
+    "name_plural": "Saint Helena Pounds"
+  },
+  "SLL": {
+    "symbol": "Le",
+    "name": "Sierra Leonean Leone",
+    "symbol_native": "Le",
+    "decimal_digits": 0,
+    "rounding": 0,
+    "code": "SLL",
+    "name_plural": "Sierra Leonean Leones"
+  },
   "SOS": {
     "symbol": "Ssh",
     "name": "Somali Shilling",
@@ -889,6 +1051,24 @@
     "rounding": 0,
     "code": "SOS",
     "name_plural": "Somali shillings"
+  },
+  "SRD": {
+    "symbol": "$",
+    "name": "Surinamese Dollar",
+    "symbol_native": "$",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "SRD",
+    "name_plural": "Surinamese dollars"
+  },
+  "STN": {
+    "symbol": "Db",
+    "name": "São Tomé and Príncipe dobra",
+    "symbol_native": "Db",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "STN",
+    "name_plural": "São Tomé and Príncipe dobras"
   },
   "SYP": {
     "symbol": "SY£",
@@ -907,6 +1087,24 @@
     "rounding": 0,
     "code": "THB",
     "name_plural": "Thai baht"
+  },
+  "TJS": {
+    "symbol": "SM",
+    "name": "Tajikistani Somoni",
+    "symbol_native": "SM",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "TJS",
+    "name_plural": "Tajikistani Somoni"
+  },
+  "TMT": {
+    "symbol": "T",
+    "name": "Turkmenistan Manat",
+    "symbol_native": "T",
+    "decimal_digits": 3,
+    "rounding": 0,
+    "code": "TMT",
+    "name_plural": "Turkmenistan Manats"
   },
   "TND": {
     "symbol": "DT",
@@ -943,6 +1141,15 @@
     "rounding": 0,
     "code": "TTD",
     "name_plural": "Trinidad and Tobago dollars"
+  },
+  "TVD": {
+    "symbol": "TV$",
+    "name": "Tuvula Dollar",
+    "symbol_native": "TV$",
+    "decimal_digits": 2,
+    "rounding": 0,
+    "code": "TVD",
+    "name_plural": "Tuvula dollars"
   },
   "TWD": {
     "symbol": "NT$",
@@ -998,13 +1205,13 @@
     "code": "UZS",
     "name_plural": "Uzbekistan som"
   },
-  "VEF": {
+  "VES": {
     "symbol": "Bs.F.",
     "name": "Venezuelan Bolívar",
     "symbol_native": "Bs.F.",
     "decimal_digits": 2,
     "rounding": 0,
-    "code": "VEF",
+    "code": "VES",
     "name_plural": "Venezuelan bolívars"
   },
   "VND": {
@@ -1052,13 +1259,13 @@
     "code": "ZAR",
     "name_plural": "South African rand"
   },
-  "ZMK": {
+  "ZMW": {
     "symbol": "ZK",
     "name": "Zambian Kwacha",
     "symbol_native": "ZK",
     "decimal_digits": 0,
     "rounding": 0,
-    "code": "ZMK",
+    "code": "ZMW",
     "name_plural": "Zambian kwachas"
   }
 }

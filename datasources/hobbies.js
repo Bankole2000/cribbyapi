@@ -21,7 +21,6 @@ class HobbiesAPI extends DataSource {
   }
 
   async createHobby(args) {
-    console.log({ args });
     let { id, data } = args;
     try {
       if (id) {

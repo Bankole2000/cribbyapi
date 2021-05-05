@@ -12,8 +12,16 @@ class ListingAPI extends DataSource {
   initialize(config) {}
 
   async getListings(args) {
-    const listings = await prisma.listing.findMany({});
-    console.log(listings);
+    const listings = await prisma.listing.findMany({
+      include: {
+        baseCurrency: true,
+        owner: {
+          include: {
+            profile: true,
+          },
+        },
+      },
+    });
     return listings;
   }
 

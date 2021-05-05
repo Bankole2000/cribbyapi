@@ -292,10 +292,10 @@ module.exports = gql`
     longDescription: String
     additionalRules: [String]
     baseCurrency: Currency
-    basicPrice: Float
-    pricePerWeekend: Float
-    pricePerWeek: Float
-    pricePerMonth: Float
+    basicPrice(currency: CurrencyCode!): Float
+    pricePerWeekend(currency: CurrencyCode!): Float
+    pricePerWeek(currency: CurrencyCode!): Float
+    pricePerMonth(currency: CurrencyCode!): Float
     isPublished: Boolean
     owner: User
     ownerId: Int
@@ -303,6 +303,7 @@ module.exports = gql`
     bookings: [Booking]
     createdAt: String
     updatedAt: String
+    requestedCurrency(currency: CurrencyCode!): Currency
   }
 
   input ListingInput {
@@ -310,6 +311,7 @@ module.exports = gql`
     shortDescription: String
     longDescription: String
     additionalRules: [String]
+    baseCurrency: CurrencyCode
     basicPrice: Float
     pricePerWeekend: Float
     pricePerWeek: Float
@@ -376,6 +378,16 @@ module.exports = gql`
     rounding: Int
   }
 
+  # input CurrencyInput {
+  #   symbol: String
+  #   name: String
+  #   pluralName: String
+  #   nativeSymbol: String
+  #   code: CurrencyCode
+  #   decimalDigits: Int
+  #   rounding: Int
+  # }
+
   """
   Possible Roles available to users - Users can have multiple roles
   """
@@ -392,7 +404,6 @@ module.exports = gql`
     AFN
     ALL
     AMD
-    ANG
     AOA
     ARS
     AUD
@@ -404,7 +415,6 @@ module.exports = gql`
     BGN
     BHD
     BIF
-    BMD
     BND
     BOB
     BRL
@@ -455,18 +465,15 @@ module.exports = gql`
     JOD
     JPY
     KES
-    KSG
     KHR
     KMF
     KRW
     KWD
     KYD
     KZT
-    LAK
     LBP
     LKR
     LRD
-    LSL
     LTL
     LVL
     LYD
@@ -477,9 +484,7 @@ module.exports = gql`
     MMK
     MNT
     MOP
-    MRO
     MUR
-    MVR
     MWK
     MXN
     MYR
@@ -505,7 +510,6 @@ module.exports = gql`
     RWF
     SAR
     SBD
-    SCR
     SDG
     SEK
     SGD
@@ -513,23 +517,24 @@ module.exports = gql`
     SLL
     SOS
     SRD
-    STD
+    STN
     SVC
     SYP
-    SZL
     THB
     TJS
+    TMT
     TND
     TOP
     TRY
     TTD
+    TVD
     TWD
     TZS
     UAH
     UGX
     UYU
     UZS
-    VEF
+    VES
     VND
     VUV
     WST
@@ -539,7 +544,6 @@ module.exports = gql`
     XPF
     YER
     ZAR
-    ZMK
     ZMW
   }
 `;

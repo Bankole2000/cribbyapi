@@ -25,6 +25,7 @@ const UserAPI = require("./datasources/users");
 const HobbyAPI = require("./datasources/hobbies");
 const CurrencyAPI = require("./datasources/currencies");
 const ListingAPI = require("./datasources/listings");
+const FXAPI = require("./datasources/currencyExchange");
 const typeDefs = require("./schema");
 
 const resolvers = require("./resolvers");
@@ -40,6 +41,7 @@ const dataSources = () => ({
   hobbyAPI: new HobbyAPI(),
   currencyAPI: new CurrencyAPI(),
   listingAPI: new ListingAPI(),
+  fxAPI: new FXAPI(),
 });
 
 const server = new ApolloServer({
@@ -62,7 +64,6 @@ const server = new ApolloServer({
           });
         }
       }
-      // console.log({ WebSocket, context });
       console.log("disconnected");
     },
     onConnect: (connectionParams, WebSocket, context) => {
@@ -71,7 +72,7 @@ const server = new ApolloServer({
           "cribbyToken="
         )[1];
         const user = authUtil.verifyToken(cookie);
-        console.log("ConnectedUser", user);
+        console.log("ConnectedUser", user, { file: "index.js", line: "75" });
         return { user }; // this is returned as context from the subscriptions object and is available in apollo-server context as connection.context
       }
     },
