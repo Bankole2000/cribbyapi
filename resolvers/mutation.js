@@ -1,8 +1,7 @@
-const { prisma } = require(".prisma/client");
+const currencyObject = require("../data/currency.json");
 const authUtils = require("../utils/auth");
 const validators = require("../utils/validators");
 const { AuthenticationError } = require("apollo-server-express");
-const { update } = require("lodash");
 
 module.exports = {
   signUp: async (
@@ -54,9 +53,6 @@ module.exports = {
     userCredentials.email == "techybanky@gmail.com"
       ? userCredentials.roles.push("ADMIN")
       : "";
-
-    // Create user in db
-    console.log(userCredentials);
     const createdUser = await dataSources.userAPI.createUser(userCredentials);
     // create token and send
     const { roles, uuid, emailIsVerified, id } = createdUser;
@@ -68,7 +64,7 @@ module.exports = {
       email,
       id,
     });
-    console.log({ res, line: 57 });
+    console.log({ res, file: "mutation.js", line: 67 });
     res.cookie("cribbyToken", token, {
       httpOnly: false,
       sameSite: "none",
@@ -79,7 +75,11 @@ module.exports = {
         .updateUser({ emailVerificationToken: token, uuid })
         .then((data) => {
           // Send Verification Link to Email
-          console.log("Verification Email Sent", { data });
+          console.log("Verification Email Sent", {
+            data,
+            file: "mutation.js",
+            line: 81,
+          });
           pubsub.publish("USERSIGNEDUP", { userSignedUp: data });
         });
     }
@@ -159,7 +159,7 @@ module.exports = {
         let { uuid } = existingUser;
         signedInUser = await dataSources.userAPI.getUserDetails(uuid);
         let { roles, emailIsVerified, username, email, id } = signedInUser;
-        console.log({ signedInUser });
+        console.log({ signedInUser, file: "mutation.js", line: 162 });
         const token = authUtils.createToken({
           roles,
           uuid,
@@ -174,7 +174,7 @@ module.exports = {
           sameSite: "none",
           secure: true,
         });
-        console.log({ cookie: res.cookie.token, line: 175 });
+        console.log({ cookie: res.cookie.token, line: 177 });
         pubsub.publish("USERLOGGEDIN", { userLoggedIn: signedInUser });
         return {
           token,
@@ -188,7 +188,7 @@ module.exports = {
     return dataSources;
   },
   signOut: async (parent, args, { dataSources, req, res, user }, info) => {
-    console.log({ user, file: "mutation.js", line: 189 });
+    console.log({ user, file: "mutation.js", line: 190 });
     if (user) {
       const { uuid } = user;
       await dataSources.userAPI.updateUser({
@@ -288,7 +288,7 @@ module.exports = {
         .updateUser({ uuid: updatedUser.uuid, emailVerificationToken: token })
         .then((data) => {
           // TODO: Send user email Confirmation to new email address
-          console.log(data);
+          console.log({ data, file: "mutation.js", line: 290 });
         });
     }
     return updatedUser;
@@ -344,7 +344,6 @@ module.exports = {
     ) {
       throw new Error("Bio cannot be empty");
     }
-    console.log(updateData.hobbies);
 
     const updatedUser = await dataSources.userAPI.updateUserProfile({
       uuid,
@@ -364,6 +363,46 @@ module.exports = {
     info
   ) => {
     const { uuid } = user;
+    const { baseCurrency: currencyCode } = listing;
+    if (!currencyCode) {
+      throw new Error("Listing requires a base currency");
+    }
+    if (!currencyObject[currencyCode]) {
+      throw new Error("Invalid Currency");
+    }
+    const {
+      symbol,
+      name,
+      symbol_native,
+      decimal_digits,
+      rounding,
+      code,
+      name_plural,
+    } = currencyObject[currencyCode];
+    listing.baseCurrency = {
+      connectOrCreate: {
+        create: {
+          symbol,
+          name,
+          code,
+          rounding: Number(rounding),
+          decimalDigits: Number(decimal_digits),
+          nativeSymbol: symbol_native,
+          pluralName: name_plural,
+        },
+        // update: {
+        //   symbol,
+        //   name,
+        //   code,
+        //   rounding,
+        //   decimalDigits: decimal_digits,
+        //   nativeSymbol: symbol_native,
+        //   pluralName: name_plural,
+        // },
+        where: { code },
+      },
+    };
+
     const newListing = dataSources.listingAPI.createListing({ uuid, listing });
     return newListing;
   },

@@ -177,14 +177,16 @@ model Listing {
 }
 
 model Currency {
-  id           Int       @id @default(autoincrement())
-  uuid         String    @unique @default(uuid()) @db.Uuid
-  symbol       String
-  name         String
-  nativeSymbol String
-  code         String
-  pluralName   String
-  Listing      Listing[]
+  id            Int       @id @default(autoincrement())
+  uuid          String    @unique @default(uuid()) @db.Uuid
+  symbol        String
+  name          String
+  nativeSymbol  String
+  code          String    @unique
+  rounding      Int
+  decimalDigits Int
+  pluralName    String
+  Listing       Listing[]
 }
 
 model ListingReview {
@@ -244,6 +246,16 @@ model Booking {
   guestId   Int
   createdAt DateTime @default(now()) @db.Timestamptz(6)
   updatedAt DateTime @updatedAt
+}
+
+model ExchangeRate {
+  id           Int      @id @default(autoincrement())
+  uuid         String   @unique @default(uuid()) @db.Uuid
+  from         String   @db.VarChar(3)
+  to           String   @db.VarChar(3)
+  exchangeRate Decimal
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 enum Role {
