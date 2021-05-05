@@ -12,13 +12,13 @@ module.exports = {
         console.log("User Logged In!!!", {
           user,
           file: "subscriptions.js",
-          line: 12,
+          line: 15,
         });
 
         return pubsub.asyncIterator(["USERLOGGEDIN"]);
       },
       (payload, variables) => {
-        console.log({ payload, variables, file: "subscriptions.js", line: 17 });
+        console.log({ payload, variables, file: "subscriptions.js", line: 21 });
         if (!variables) {
           return false;
         }

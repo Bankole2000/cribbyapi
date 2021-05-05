@@ -138,7 +138,6 @@ class UserAPI extends DataSource {
       };
       delete updateData.hobbies;
     }
-    console.log(hobbies);
     const profileExists = await prisma.profile.findUnique({
       where: {
         uuid,

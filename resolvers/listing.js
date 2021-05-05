@@ -10,7 +10,6 @@ module.exports = {
         baseCurrency.code,
         currency
       );
-      console.log({ exchangeRate });
       return Number(basicPrice * exchangeRate).toFixed(
         baseCurrency.decimalDigits
       );
@@ -28,7 +27,6 @@ module.exports = {
         baseCurrency.code,
         currency
       );
-      console.log({ exchangeRate });
       return Number(pricePerWeekend * exchangeRate).toFixed(
         baseCurrency.decimalDigits
       );
@@ -46,7 +44,6 @@ module.exports = {
         baseCurrency.code,
         currency
       );
-      console.log({ exchangeRate });
       return Number(pricePerWeek * exchangeRate).toFixed(
         baseCurrency.decimalDigits
       );
@@ -64,7 +61,6 @@ module.exports = {
         baseCurrency.code,
         currency
       );
-      console.log({ exchangeRate });
       return Number(pricePerMonth * exchangeRate).toFixed(
         baseCurrency.decimalDigits
       );

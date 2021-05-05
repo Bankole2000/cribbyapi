@@ -22,7 +22,6 @@ class ListingAPI extends DataSource {
         },
       },
     });
-    console.log(listings);
     return listings;
   }
 
