@@ -10,12 +10,24 @@ module.exports = gql`
     """
     Get all users (Required Admin Access)
     """
-    allUsers: [User]
+    users: [User]
     me: User
-    allListings: [Listing]
-    allCurrencyCodes: [CurrencyCode]
+    listings: [Listing]
+    currencies: [Currency]
+    countries(
+      name: String
+      currencyCode: CurrencyCode
+      continentCode: ContinentCode
+      continent: String
+      currencyCode: CurrencyCode
+    ): [Country]
+    currencyCodes: [CurrencyCode]
+    countryCodes: [CountryCode]
+    statesByCountry(countryCode: CountryCode!): [State]
+    citiesByState(countryCode: CountryCode!, stateCode: String!): [City]
+    continentCodes: [ContinentCode]
     currencyDetails(code: CurrencyCode): Currency
-    getHobbies(title: String, description: String, emoticon: String): [Hobby]
+    hobbies(title: String, description: String, emoticon: String): [Hobby]
   }
 
   type Mutation {
@@ -43,7 +55,7 @@ module.exports = gql`
     updateListing(listingUUID: String, updateData: ListingInput): Listing
       @requiresLogin
     deleteListing(listingUUID: String): Listing @requiresLogin
-    toggleListingPublishedStatus(uuid: String): Listing
+    toggleListingPublishedStatus(listingUUID: String): Listing @requiresLogin
     """
     Add or Update Hobbies (include ID (id) field to update, exclude to create)
     """
@@ -296,6 +308,19 @@ module.exports = gql`
     pricePerWeekend(currency: CurrencyCode!): Float
     pricePerWeek(currency: CurrencyCode!): Float
     pricePerMonth(currency: CurrencyCode!): Float
+    guestCapacity: Int
+    guestArrivalDaysNotice: Int
+    guestBookingMonthsInAdvance: Int
+    bookingStayDaysMin: Int
+    bookingStayDaysMax: Int
+    locationCountry: String
+    countryCode: CountryCode
+    locationState: String
+    stateCode: String
+    locationCity: String
+    latitude: Float
+    longitude: Float
+    amenities: [ListingAmenity]
     isPublished: Boolean
     owner: User
     ownerId: Int
@@ -316,7 +341,26 @@ module.exports = gql`
     pricePerWeekend: Float
     pricePerWeek: Float
     pricePerMonth: Float
+    guestCapacity: Int
+    guestArrivalDaysNotice: Int
+    guestBookingMonthsInAdvance: Int
+    bookingStayDaysMin: Int
+    bookingStayDaysMax: Int
+    locationCountry: String
+    countryCode: CountryCode
+    locationState: String
+    stateCode: String
+    locationCity: String
+    latitude: Float
+    longitude: Float
     houseRules: [HouseRule]
+  }
+
+  type ListingAmenity {
+    id: ID
+    uuid: String
+    name: String
+    category: String
   }
 
   input HouseRule {
@@ -378,15 +422,43 @@ module.exports = gql`
     rounding: Int
   }
 
-  # input CurrencyInput {
-  #   symbol: String
-  #   name: String
-  #   pluralName: String
-  #   nativeSymbol: String
-  #   code: CurrencyCode
-  #   decimalDigits: Int
-  #   rounding: Int
-  # }
+  type Country {
+    tld: String
+    name: String
+    countryCode: CountryCode
+    continent: String
+    continentCode: ContinentCode
+    capital: String
+    currencyCode: CurrencyCode
+    currency: Currency
+    latitude: Float
+    longitude: Float
+    emoji: String
+    emojiU: String
+    phoneCode: String
+    states: [State]
+    subregion: String
+  }
+
+  type State {
+    name: String
+    stateCode: String
+    countryCode: CountryCode
+    countryName: String
+    latitude: Float
+    longitude: Float
+    cities: [City]
+  }
+
+  type City {
+    name: String
+    stateCode: String
+    stateName: String
+    countryCode: CountryCode
+    countryName: String
+    latitude: Float
+    longitude: Float
+  }
 
   """
   Possible Roles available to users - Users can have multiple roles
@@ -396,6 +468,263 @@ module.exports = gql`
     AGENT
     SUPPORT
     ADMIN
+  }
+
+  enum ListingPurpose {
+    RESIDENTIAL
+    COMMERCIAL
+    EVENTS
+    ANY
+  }
+
+  enum ListingType {
+    ENTIRE_PLACE
+    PRIVATE_ROOM
+    SHARED_ROOM
+  }
+
+  enum ContinentCode {
+    AS
+    EU
+    AN
+    AF
+    OC
+    NA
+    SA
+  }
+
+  enum CountryCode {
+    BD
+    BE
+    BF
+    BG
+    BA
+    BB
+    WF
+    BL
+    BN
+    BO
+    BH
+    BI
+    BJ
+    JM
+    BV
+    BW
+    WS
+    BQ
+    BR
+    BS
+    JE
+    BY
+    BZ
+    RU
+    RW
+    RS
+    TL
+    RE
+    TM
+    TJ
+    RO
+    TK
+    GW
+    GU
+    GT
+    GS
+    GR
+    GQ
+    GP
+    JP
+    GY
+    GG
+    GF
+    GE
+    GD
+    GB
+    GA
+    SV
+    GN
+    GM
+    GL
+    GI
+    GH
+    OM
+    TN
+    JO
+    HR
+    HT
+    HU
+    HK
+    HN
+    HM
+    PR
+    PS
+    PW
+    PT
+    SJ
+    PY
+    IQ
+    PA
+    PF
+    PG
+    PE
+    PK
+    PH
+    PN
+    PL
+    PM
+    EH
+    EE
+    EG
+    ZA
+    EC
+    IT
+    VN
+    SB
+    ET
+    SO
+    SA
+    ES
+    ER
+    ME
+    MD
+    MG
+    MF
+    MA
+    MC
+    UZ
+    MM
+    ML
+    MO
+    MN
+    MH
+    MK
+    MU
+    MT
+    MW
+    MQ
+    MP
+    MS
+    IM
+    UG
+    TZ
+    MY
+    MX
+    IL
+    FR
+    IO
+    SH
+    FI
+    FJ
+    FK
+    FM
+    FO
+    NI
+    NL
+    NO
+    NA
+    VU
+    NC
+    NE
+    NF
+    NG
+    NZ
+    NP
+    NR
+    NU
+    CK
+    XK
+    CI
+    CH
+    CO
+    CN
+    CM
+    CL
+    CC
+    CA
+    CG
+    CF
+    CD
+    CZ
+    CY
+    CX
+    CR
+    CV
+    SY
+    KE
+    SR
+    KI
+    KH
+    KN
+    KM
+    SK
+    KR
+    SI
+    KW
+    SN
+    SM
+    SL
+    KZ
+    KY
+    SG
+    SE
+    SD
+    DO
+    DM
+    DJ
+    DK
+    VG
+    DE
+    YE
+    DZ
+    US
+    UY
+    YT
+    UM
+    LB
+    LC
+    TV
+    TW
+    TT
+    TR
+    LK
+    LI
+    LV
+    TO
+    LT
+    LU
+    LR
+    TH
+    TF
+    TG
+    TD
+    TC
+    LY
+    VA
+    VC
+    AE
+    AD
+    AG
+    AF
+    AI
+    VI
+    IS
+    IR
+    AM
+    AL
+    AO
+    AS
+    AR
+    AU
+    AT
+    AW
+    IN
+    AX
+    AZ
+    IE
+    ID
+    UA
+    QA
+    MZ
   }
 
   enum CurrencyCode {

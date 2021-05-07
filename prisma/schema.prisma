@@ -153,27 +153,65 @@ model Profile {
 }
 
 model Listing {
-  id               Int             @id @default(autoincrement())
-  uuid             String?         @unique @default(uuid()) @db.Uuid
-  title            String          @db.VarChar(255)
-  shortDescription String?         @db.VarChar(255)
-  longDescription  String?         @db.Text
-  additionalRules  String[]
-  baseCurrency     Currency?       @relation(fields: [currencyId], references: [id])
-  currencyId       Int?
-  basicPrice       Decimal?        @default(0.00) @db.Decimal(10, 2)
-  pricePerWeekend  Decimal?        @default(0.00) @db.Decimal(10, 2)
-  pricePerWeek     Decimal?        @default(0.00) @db.Decimal(10, 2)
-  pricePerMonth    Decimal?        @default(0.00) @db.Decimal(10, 2)
-  ispublished      Boolean?        @default(false) @db.Boolean
-  owner            User            @relation(fields: [ownerId], references: [id])
-  ownerId          Int
-  images           ListingImage[]
-  bookings         Booking[]
-  reviews          ListingReview[]
-  ratings          ListingRating[]
-  createdAt        DateTime        @default(now()) @db.Timestamptz(6)
-  updatedAt        DateTime        @updatedAt
+  id                          Int             @id @default(autoincrement())
+  uuid                        String?         @unique @default(uuid()) @db.Uuid
+  title                       String          @db.VarChar(255)
+  shortDescription            String?         @db.VarChar(255)
+  longDescription             String?         @db.Text
+  additionalRules             String[]
+  baseCurrency                Currency?       @relation(fields: [currencyId], references: [id])
+  currencyId                  Int?
+  basicPrice                  Decimal?        @default(0.00) @db.Decimal(10, 2)
+  pricePerWeekend             Decimal?        @default(0.00) @db.Decimal(10, 2)
+  pricePerWeek                Decimal?        @default(0.00) @db.Decimal(10, 2)
+  pricePerMonth               Decimal?        @default(0.00) @db.Decimal(10, 2)
+  isPublished                 Boolean?        @default(false) @db.Boolean
+  guestCapacity               Int
+  guestArrivalDaysNotice      Int
+  guestBookingMonthsInAdvance Int
+  bookingStayDaysMin          Int
+  bookingStayDaysMax          Int
+  locationState               String
+  locationCountry             String
+  locationCity                String
+  streetAddress               String
+  listingPurpose              String          @db.VarChar(255)
+  listingType                 String          @db.VarChar(255)
+  latitude                    Decimal
+  longitude                   Decimal
+  amenities                   Amenity[]
+  specialFeatures             String[]
+  guestPreferences            String[]
+  owner                       User            @relation(fields: [ownerId], references: [id])
+  ownerId                     Int
+  images                      ListingImage[]
+  bookings                    Booking[]
+  reviews                     ListingReview[]
+  ratings                     ListingRating[]
+  createdAt                   DateTime        @default(now()) @db.Timestamptz(6)
+  updatedAt                   DateTime        @updatedAt
+}
+
+model Amenity {
+  id                Int              @id @default(autoincrement())
+  uuid              String           @unique @default(uuid()) @db.Uuid
+  name              String           @db.VarChar(255)
+  category          AmenityCategory? @relation(fields: [amenityCategoryId], references: [id])
+  categoryId        Int
+  Listings          Listing[]
+  amenityCategoryId Int?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model AmenityCategory {
+  id          Int       @id @default(autoincrement())
+  uuid        String    @unique @default(uuid()) @db.Uuid
+  name        String    @db.VarChar(255)
+  description String    @db.Text
+  amenities   Amenity[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 }
 
 model Currency {

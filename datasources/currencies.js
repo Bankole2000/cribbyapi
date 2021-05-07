@@ -21,6 +21,31 @@ class CurrencyAPI extends DataSource {
     });
     return currency;
   }
+  getAllCurrencyDetails() {
+    let currencyCodes = Object.keys(currencyObject);
+    const currencies = [];
+    currencyCodes.forEach((currencyCode) => {
+      const {
+        symbol,
+        name,
+        symbol_native,
+        decimal_digits,
+        rounding,
+        code,
+        name_plural,
+      } = currencyObject[currencyCode];
+      currencies.push({
+        symbol,
+        name,
+        code,
+        rounding: Number(rounding),
+        decimalDigits: Number(decimal_digits),
+        nativeSymbol: symbol_native,
+        pluralName: name_plural,
+      });
+    });
+    return currencies;
+  }
   getCurrencyDetails({ code }) {
     return currencyObject[code];
   }
