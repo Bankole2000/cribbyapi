@@ -1,5 +1,5 @@
 module.exports = {
-  allUsers: (parent, args, context, info) => {
+  users: (parent, args, context, info) => {
     return context.dataSources.userAPI.getAllUsers(args);
   },
   me: (parent, args, { dataSources, user, req, res }, info) => {
@@ -10,10 +10,13 @@ module.exports = {
       user: undefined,
     };
   },
-  allListings: (parent, args, { dataSources }, info) => {
+  listings: (parent, args, { dataSources }, info) => {
     return dataSources.listingAPI.getListings(args);
   },
-  allCurrencyCodes: (parent, args, { dataSources }, info) => {
+  currencies: (parent, args, { dataSources }, info) => {
+    return dataSources.currencyAPI.getAllCurrencyDetails();
+  },
+  currencyCodes: (parent, args, { dataSources }, info) => {
     return dataSources.currencyAPI.getAllCurrencyCodes();
   },
   currencyDetails: (parent, args, { dataSources }, info) => {
@@ -36,7 +39,27 @@ module.exports = {
       pluralName: name_plural,
     };
   },
-  getHobbies: (parent, args, { dataSources }, info) => {
+  countryCodes: (parent, args, { dataSources }, info) => {
+    return dataSources.locationAPI.getCountryCodes(args);
+  },
+  countries: (parent, args, { dataSources }, info) => {
+    return dataSources.locationAPI.getCountries(args);
+  },
+  statesByCountry: (parent, args, { dataSources }, info) => {
+    return dataSources.locationAPI.getStatesByCountry(args);
+  },
+  citiesByState: (
+    parent,
+    { countryCode, stateCode },
+    { dataSources },
+    info
+  ) => {
+    return dataSources.locationAPI.getCitiesByState({ countryCode, stateCode });
+  },
+  continentCodes: (parent, args, { dataSources }, info) => {
+    return dataSources.locationAPI.getContinentCodes();
+  },
+  hobbies: (parent, args, { dataSources }, info) => {
     return dataSources.hobbyAPI.getHobbies(args);
   },
 };

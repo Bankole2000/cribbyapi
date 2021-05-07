@@ -390,15 +390,6 @@ module.exports = {
           nativeSymbol: symbol_native,
           pluralName: name_plural,
         },
-        // update: {
-        //   symbol,
-        //   name,
-        //   code,
-        //   rounding,
-        //   decimalDigits: decimal_digits,
-        //   nativeSymbol: symbol_native,
-        //   pluralName: name_plural,
-        // },
         where: { code },
       },
     };
@@ -460,5 +451,44 @@ module.exports = {
     });
 
     return hobby;
+  },
+  toggleListingPublishedStatus: async (
+    parent,
+    { listingUUID: uuid },
+    { dataSources, user },
+    info
+  ) => {
+    const listingToUpdate = await dataSources.listingAPI.getListingByUUID(uuid);
+
+    if (!listingToUpdate) {
+      throw new Error("No listing with this UUID");
+    }
+
+    if (
+      !(listingToUpdate.owner.uuid === user.uuid) &&
+      !user.roles.includes("ADMIN")
+    ) {
+      throw new AuthenticationError(
+        "Can't update - This is not your user profile"
+      );
+    }
+    const { isPublished: isCurrentlyPublished } = listingToUpdate;
+    let updatedListing;
+    if (isCurrentlyPublished) {
+      // TODO: Do necessary checks before unpublishing
+      updatedListing = await dataSources.listingAPI.setListingIsPublishedStatus(
+        uuid,
+        !isCurrentlyPublished
+      );
+      return updatedListing;
+    }
+    if (!isCurrentlyPublished) {
+      // TODO: Do necessary checks before publishing e.g. basic price and currency set
+      updatedListing = await dataSources.listingAPI.setListingIsPublishedStatus(
+        uuid,
+        !isCurrentlyPublished
+      );
+      return updatedListing;
+    }
   },
 };

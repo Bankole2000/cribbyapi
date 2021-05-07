@@ -64,7 +64,7 @@ class ListingAPI extends DataSource {
   }
 
   async deleteListing(uuid) {
-    const deletedListing = prisma.listing.delete({
+    const deletedListing = await prisma.listing.delete({
       where: {
         uuid,
       },
@@ -74,6 +74,25 @@ class ListingAPI extends DataSource {
       },
     });
     return deletedListing;
+  }
+  async setListingIsPublishedStatus(uuid, status) {
+    const updatedListing = await prisma.listing.update({
+      data: {
+        isPublished: status,
+      },
+      where: {
+        uuid,
+      },
+      include: {
+        owner: {
+          include: {
+            profile: true,
+          },
+        },
+        baseCurrency: true,
+      },
+    });
+    return updatedListing;
   }
 }
 
