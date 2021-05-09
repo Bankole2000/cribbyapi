@@ -1,11 +1,11 @@
 const { withFilter } = require("apollo-server");
 
 module.exports = {
-  favorites: {
-    subscribe: (parent, args, { pubsub, user }, info) => {
-      return pubsub.asyncIterator(["FAVORITESUPDATE"]);
-    },
-  },
+  // favorites: {
+  //   subscribe: (parent, args, { pubsub, user }, info) => {
+  //     return pubsub.asyncIterator(["FAVORITESUPDATE"]);
+  //   },
+  // },
   userLoggedIn: {
     subscribe: withFilter(
       (parent, args, { pubsub, user }, info) => {

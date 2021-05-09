@@ -77,6 +77,9 @@ class LocationAPI extends DataSource {
   getCountryCodes() {
     return allCountryCodes;
   }
+  getCountryByCode(countryCode) {
+    return _.filter(allCountries, { countryCode })[0];
+  }
   getContinentCodes() {
     return new Set(countryToContinent.map((country) => country.Continent_Code));
   }

@@ -20,6 +20,11 @@ class ListingAPI extends DataSource {
             profile: true,
           },
         },
+        houseRules: {
+          include: {
+            rule: true,
+          },
+        },
       },
     });
     return listings;
@@ -59,8 +64,68 @@ class ListingAPI extends DataSource {
         uuid,
       },
       data: updateData,
+      include: {
+        baseCurrency: true,
+      },
     });
     return updatedListing;
+  }
+
+  async deleteListingHouseRules(listingId) {
+    const deletedListingHouseRules = await prisma.listingHasHouseRule.deleteMany(
+      {
+        where: {
+          listingId,
+        },
+      }
+    );
+    console.log(deletedListingHouseRules);
+    return deletedListingHouseRules;
+  }
+
+  async getHouseRules() {
+    const houseRules = await prisma.houseRule.findMany({
+      include: {
+        listings: true,
+      },
+    });
+    return houseRules;
+  }
+
+  async addHouseRule(houseRuledata) {
+    const newHouseRule = await prisma.houseRule.create({
+      data: houseRuledata,
+    });
+    return newHouseRule;
+  }
+
+  async getHouseRuleById(id) {
+    const houseRule = prisma.houseRule.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        listings: true,
+      },
+    });
+    return houseRule;
+  }
+  async updateHouseRule({ id, houseRuleData: data }) {
+    const updatedHouseRule = await prisma.houseRule.update({
+      where: {
+        id,
+      },
+      data,
+    });
+    return updatedHouseRule;
+  }
+  async deleteHouseRule(uuid) {
+    const deletedHouseRule = await prisma.houseRule.delete({
+      where: {
+        uuid,
+      },
+    });
+    return deletedHouseRule;
   }
 
   async deleteListing(uuid) {

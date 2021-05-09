@@ -2,6 +2,7 @@ const currencyObject = require("../data/currency.json");
 const authUtils = require("../utils/auth");
 const validators = require("../utils/validators");
 const { AuthenticationError } = require("apollo-server-express");
+const { prisma } = require(".prisma/client");
 
 module.exports = {
   signUp: async (
@@ -393,7 +394,34 @@ module.exports = {
         where: { code },
       },
     };
-
+    if (listing.houseRules) {
+      const { houseRules } = listing;
+      if (houseRules.length > 0) {
+        listing.houseRules = { create: [] };
+        houseRules.forEach((rule) => {
+          const { isAllowed, ruleId: id } = rule;
+          listing.houseRules.create.push({
+            isAllowed,
+            rule: {
+              connect: {
+                id,
+              },
+            },
+          });
+        });
+      } else {
+        delete listing.houseRules;
+      }
+    }
+    if (listing.amenities) {
+      const { amenities } = listing;
+      if (amenities.length > 0) {
+        listing.amenities = { set: [] };
+        amenities.forEach((amenityId) => {
+          listing.amenities.set.push({ id: amenityId });
+        });
+      }
+    }
     const newListing = dataSources.listingAPI.createListing({ uuid, listing });
     return newListing;
   },
@@ -419,6 +447,72 @@ module.exports = {
     ) {
       throw new Error("Listing Title Cannot be empty");
     }
+    if (updateData.baseCurrency) {
+      const { baseCurrency: currencyCode } = updateData;
+      if (!currencyCode) {
+        throw new Error("Listing requires a base currency");
+      }
+      if (!currencyObject[currencyCode]) {
+        throw new Error("Invalid Currency");
+      }
+      const {
+        symbol,
+        name,
+        symbol_native,
+        decimal_digits,
+        rounding,
+        code,
+        name_plural,
+      } = currencyObject[currencyCode];
+      updateData.baseCurrency = {
+        connectOrCreate: {
+          create: {
+            symbol,
+            name,
+            code,
+            rounding: Number(rounding),
+            decimalDigits: Number(decimal_digits),
+            nativeSymbol: symbol_native,
+            pluralName: name_plural,
+          },
+          where: { code },
+        },
+      };
+    }
+    if (updateData.houseRules) {
+      const { houseRules } = updateData;
+      if (houseRules.length > 0) {
+        await dataSources.listingAPI.deleteListingHouseRules(
+          listingToUpdate.id
+        );
+        updateData.houseRules = { create: [] };
+        houseRules.forEach((rule) => {
+          const { isAllowed, ruleId: id } = rule;
+          updateData.houseRules.create.push({
+            isAllowed,
+            rule: {
+              connect: {
+                id,
+              },
+            },
+          });
+        });
+      } else {
+        await dataSources.listingAPI.deleteListingHouseRules(
+          listingToUpdate.id
+        );
+        delete updateData.houseRules;
+      }
+    }
+    if (updateData.amenities) {
+      const { amenities } = updateData;
+      if (amenities.length > 0) {
+        updateData.amenities = { set: [] };
+        amenities.forEach((amenityId) => {
+          updateData.amenities.set.push({ id: amenityId });
+        });
+      }
+    }
     const updatedListing = await dataSources.listingAPI.updateListing({
       uuid,
       updateData,
@@ -438,6 +532,98 @@ module.exports = {
     const deletedListing = await dataSources.listingAPI.deleteListing(uuid);
     return deletedListing;
   },
+  addOrUpdateAmenityCategory: async (
+    parent,
+    { categoryData },
+    { dataSources },
+    info
+  ) => {
+    let amenityCategory;
+    const { id } = categoryData;
+    if (id) {
+      categoryData.id = Number(id);
+      const existingCategory = await dataSources.amenityAPI.getAmenityCategoryById(
+        Number(id)
+      );
+      if (!existingCategory) {
+        throw new Error("No Category with that ID");
+      }
+      const updatedAmenityCategory = await dataSources.amenityAPI.updateAmenityCategory(
+        {
+          id: Number(id),
+          categoryData,
+        }
+      );
+      return updatedAmenityCategory;
+    }
+    amenityCategory = await dataSources.amenityAPI.addAmenityCategory(
+      categoryData
+    );
+    return amenityCategory;
+  },
+  deleteAmenityCategory: async (parent, args, context, info) => {
+    console.log(args);
+  },
+  addOrUpdateAmenity: async (
+    parent,
+    { amenityData },
+    { dataSources },
+    info
+  ) => {
+    const { id } = amenityData;
+    if (id) {
+      amenityData.id = Number(id);
+      const existingAmenity = dataSources.amenityAPI.getAmenityById(
+        amenityData.id
+      );
+      if (!existingAmenity) {
+        throw new Error("No Amenity with this Id");
+      }
+      const updatedAmenity = await dataSources.amenityAPI.updateAmenity({
+        id: Number(id),
+        amenityData,
+      });
+      return updatedAmenity;
+    }
+    const newAmenity = await dataSources.amenityAPI.addAmenity(amenityData);
+    return newAmenity;
+  },
+  deleteAmenity: async (parent, args, context, info) => {
+    console.log(args);
+  },
+  addOrUpdateHouseRule: async (
+    parent,
+    { houseRuleData },
+    { dataSources },
+    info
+  ) => {
+    const { id } = houseRuleData;
+    if (id) {
+      houseRuleData.id = Number(id);
+      const existingHouseRule = await dataSources.listingAPI.getHouseRuleById(
+        houseRuleData.id
+      );
+      if (!existingHouseRule) {
+        throw new Error("No house rule with that ID");
+      }
+      delete houseRuleData.id;
+      const updatedHouseRule = await dataSources.listingAPI.updateHouseRule({
+        id: Number(id),
+        houseRuleData,
+      });
+      return updatedHouseRule;
+    }
+    const newHouseRule = await dataSources.listingAPI.addHouseRule(
+      houseRuleData
+    );
+    return newHouseRule;
+  },
+  deleteHouseRule: async (parent, { houseRuleUUID }, { dataSources }, info) => {
+    const deletedHouseRule = await dataSources.listingAPI.deleteHouseRule(
+      houseRuleUUID
+    );
+    return deletedHouseRule;
+  },
   addOrUpdateHobby: async (
     parent,
     { hobby: hobbyData },
@@ -451,6 +637,9 @@ module.exports = {
     });
 
     return hobby;
+  },
+  deleteHobby: async (parent, args, context, info) => {
+    console.log(args);
   },
   toggleListingPublishedStatus: async (
     parent,

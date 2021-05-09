@@ -27,6 +27,9 @@ module.exports = gql`
     citiesByState(countryCode: CountryCode!, stateCode: String!): [City]
     continentCodes: [ContinentCode]
     currencyDetails(code: CurrencyCode): Currency
+    amenities: [ListingAmenity]
+    amenityCategories: [ListingAmenityCategory]
+    houseRules: [HouseRule]
     hobbies(title: String, description: String, emoticon: String): [Hobby]
   }
 
@@ -56,22 +59,26 @@ module.exports = gql`
       @requiresLogin
     deleteListing(listingUUID: String): Listing @requiresLogin
     toggleListingPublishedStatus(listingUUID: String): Listing @requiresLogin
+    addOrUpdateAmenityCategory(
+      categoryData: ListingAmenityCategoryInput
+    ): ListingAmenityCategory
+    deleteAmenityCategory(categoryId: Int): ListingAmenityCategory
+    addOrUpdateAmenity(amenityData: ListingAmenityInput): ListingAmenity
+    deleteAmenity(amenityId: Int): ListingAmenity
+    addOrUpdateHouseRule(houseRuleData: HouseRuleInput): HouseRule
+    deleteHouseRule(houseRuleUUID: String!): HouseRule
     """
     Add or Update Hobbies (include ID (id) field to update, exclude to create)
     """
     addOrUpdateHobby(hobby: HobbyInput): Hobby
+    deleteHobby(hobbyId: Int): Hobby
   }
 
   type Subscription {
-    favorites: FavoriteCount
     userLoggedIn: User
     userSignedUp: User
   }
 
-  type FavoriteCount {
-    sessionId: ID
-    count: Int
-  }
   """
   Base User ObjectType
   """
@@ -303,6 +310,7 @@ module.exports = gql`
     shortDescription: String
     longDescription: String
     additionalRules: [String]
+    houseRules: [hasHouseRule]
     baseCurrency: Currency
     basicPrice(currency: CurrencyCode!): Float
     pricePerWeekend(currency: CurrencyCode!): Float
@@ -313,14 +321,16 @@ module.exports = gql`
     guestBookingMonthsInAdvance: Int
     bookingStayDaysMin: Int
     bookingStayDaysMax: Int
-    locationCountry: String
-    countryCode: CountryCode
-    locationState: String
-    stateCode: String
-    locationCity: String
+    locationCountry: Country
+    locationState: State
+    locationCity: City
     latitude: Float
     longitude: Float
+    listingPurpose: String
+    listingType: String
     amenities: [ListingAmenity]
+    specialFeatures: [String]
+    guestPreferences: [String]
     isPublished: Boolean
     owner: User
     ownerId: Int
@@ -332,7 +342,7 @@ module.exports = gql`
   }
 
   input ListingInput {
-    title: String!
+    title: String
     shortDescription: String
     longDescription: String
     additionalRules: [String]
@@ -346,32 +356,86 @@ module.exports = gql`
     guestBookingMonthsInAdvance: Int
     bookingStayDaysMin: Int
     bookingStayDaysMax: Int
-    locationCountry: String
-    countryCode: CountryCode
+    locationCountry: CountryCode
     locationState: String
-    stateCode: String
     locationCity: String
+    streetAddress: String
+    listingPurpose: ListingPurpose
+    listingType: ListingType
     latitude: Float
     longitude: Float
-    houseRules: [HouseRule]
+    houseRules: [hasHouseRuleInput]
+    amenities: [Int]
+    specialFeatures: [String]
+    guestPreferences: [String]
   }
 
   type ListingAmenity {
     id: ID
     uuid: String
-    name: String
-    category: String
+    title: String
+    description: String
+    faIcon: String
+    mdiIcon: String
+    category: ListingAmenityCategory
   }
 
-  input HouseRule {
+  input ListingAmenityInput {
+    id: ID
+    title: String
+    description: String
+    faIcon: String
+    mdiIcon: String
+    categoryId: Int
+  }
+
+  type ListingAmenityCategory {
     id: ID
     uuid: String
     title: String
-    shortDescription: String
-    longDescription: String
+    description: String
+    amenities: [ListingAmenity]
+    createdAt: String
+    updatedAt: String
+  }
+
+  input ListingAmenityCategoryInput {
+    id: ID
+    title: String
+    description: String
+  }
+
+  type hasHouseRule {
+    isAllowed: Boolean
+    rule: HouseRule
+  }
+
+  input hasHouseRuleInput {
+    isAllowed: Boolean
+    ruleId: Int
+  }
+
+  type HouseRule {
+    id: ID
+    uuid: String
+    title: String
+    description: String
     code: String
-    faIcon: String
-    mdiIcon: String
+    faIconTrue: String
+    faIconFalse: String
+    mdiIconTrue: String
+    mdiIconFalse: String
+  }
+
+  input HouseRuleInput {
+    id: ID
+    title: String
+    description: String
+    code: String
+    faIconTrue: String
+    faIconFalse: String
+    mdiIconTrue: String
+    mdiIconFalse: String
   }
 
   """
