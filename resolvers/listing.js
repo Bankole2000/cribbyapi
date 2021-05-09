@@ -1,10 +1,14 @@
+const _ = require("lodash");
+
 module.exports = {
   async basicPrice(
     { baseCurrency, basicPrice, uuid },
+    // parent,
     { currency },
     { dataSources },
     info
   ) {
+    console.log({ baseCurrency });
     if (currency && currency !== baseCurrency.code) {
       const { exchangeRate } = await dataSources.fxAPI.getExchangeRate(
         baseCurrency.code,
@@ -86,5 +90,32 @@ module.exports = {
       nativeSymbol: symbol_native,
       pluralName: name_plural,
     };
+  },
+  locationCountry({ locationCountry }, args, { dataSources }, info) {
+    return dataSources.locationAPI.getCountryByCode(locationCountry);
+  },
+  locationState(
+    { locationState, locationCountry },
+    args,
+    { dataSources },
+    info
+  ) {
+    const data = { countryCode: locationCountry };
+    const countryStates = dataSources.locationAPI.getStatesByCountry(data);
+    return _.filter(countryStates, {
+      stateCode: locationState,
+      countryCode: locationCountry,
+    })[0];
+  },
+  locationCity(
+    { locationState, locationCountry, locationCity },
+    args,
+    { dataSources },
+    info
+  ) {
+    data = { countryCode: locationCountry, stateCode: locationState };
+    const stateCities = dataSources.locationAPI.getCitiesByState(data);
+    console.log({ stateCities });
+    return _.filter(stateCities, { name: locationCity })[0];
   },
 };

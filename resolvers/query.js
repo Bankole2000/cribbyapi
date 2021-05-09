@@ -59,6 +59,15 @@ module.exports = {
   continentCodes: (parent, args, { dataSources }, info) => {
     return dataSources.locationAPI.getContinentCodes();
   },
+  amenities: (parent, args, { dataSources }, info) => {
+    return dataSources.amenityAPI.getAmenities();
+  },
+  amenityCategories: (parent, args, { dataSources }, info) => {
+    return dataSources.amenityAPI.getAmenityCategories();
+  },
+  houseRules: (parent, args, { dataSources }, info) => {
+    return dataSources.listingAPI.getHouseRules();
+  },
   hobbies: (parent, args, { dataSources }, info) => {
     return dataSources.hobbyAPI.getHobbies(args);
   },

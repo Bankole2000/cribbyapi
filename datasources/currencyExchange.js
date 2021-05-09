@@ -24,6 +24,7 @@ class FXAPI extends RESTDataSource {
     });
     if (!storedExchangeRate) {
       const { conversion_rates: newExchangeRate } = await this.get(`/${to}`);
+
       let currentExchangeRate = await prisma.exchangeRate.create({
         data: {
           from,
@@ -34,7 +35,7 @@ class FXAPI extends RESTDataSource {
       return currentExchangeRate;
     }
     if (isOverADayOld(storedExchangeRate.updatedAt)) {
-      const newExchangeRate = await this.get(`/${to}`);
+      const { conversion_rates: newExchangeRate } = await this.get(`/${to}`);
       let currentExchangeRate = await prisma.exchangeRate.update({
         data: {
           exchangeRate: 1 / newExchangeRate[from],

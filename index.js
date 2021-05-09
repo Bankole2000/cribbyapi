@@ -26,6 +26,7 @@ const HobbyAPI = require("./datasources/hobbies");
 const CurrencyAPI = require("./datasources/currencies");
 const ListingAPI = require("./datasources/listings");
 const LocationAPI = require("./datasources/locations");
+const AmenityAPI = require("./datasources/amenities");
 const FXAPI = require("./datasources/currencyExchange");
 const typeDefs = require("./schema");
 
@@ -44,6 +45,7 @@ const dataSources = () => ({
   listingAPI: new ListingAPI(),
   fxAPI: new FXAPI(),
   locationAPI: new LocationAPI(),
+  amenityAPI: new AmenityAPI(),
 });
 
 const server = new ApolloServer({

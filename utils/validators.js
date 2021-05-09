@@ -40,5 +40,5 @@ module.exports.isOfAge = (dateLike) => {
 };
 
 module.exports.isOverADayOld = (lastUpdate) => {
-  return Date.now() - Date.parse(lastUpdate) > 86400000;
+  return Date.now() - Date.parse(lastUpdate) > 86400000 * 4;
 };
