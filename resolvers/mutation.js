@@ -3,6 +3,8 @@ const authUtils = require("../utils/auth");
 const validators = require("../utils/validators");
 const { AuthenticationError } = require("apollo-server-express");
 const { prisma } = require(".prisma/client");
+const nodemailer = require("nodemailer");
+const { emailMaker } = require("../utils/emailMaker");
 
 module.exports = {
   signUp: async (
@@ -71,19 +73,43 @@ module.exports = {
       sameSite: "none",
       secure: true,
     });
-    if (!emailIsVerified) {
-      dataSources.userAPI
-        .updateUser({ emailVerificationToken: token, uuid })
-        .then((data) => {
-          // Send Verification Link to Email
-          console.log("Verification Email Sent", {
-            data,
-            file: "mutation.js",
-            line: 81,
-          });
-          pubsub.publish("USERSIGNEDUP", { userSignedUp: data });
-        });
+    try {
+      const newUser = { email, username };
+      const verificationUrl = `${process.env.API_SERVER_URL}/verify/${token}`;
+      const emailText = emailMaker.makeSignupEmailTextOnly(
+        newUser,
+        verificationUrl
+      );
+      const emailHTML = emailMaker.makeSignupEmailBody(
+        newUser,
+        verificationUrl
+      );
+      const emailToSend = emailMaker.makeEmailParams(
+        "🏡 Crippy API",
+        email,
+        "📧 Just one more step - Verify your email",
+        emailText,
+        emailHTML
+      );
+      let transporter = nodemailer.createTransport(emailMaker.transport);
+      let info = await transporter.sendMail(emailToSend);
+      console.log("Message sent: %s", info.messageId);
+    } catch (err) {
+      console.log({ err });
     }
+    // if (!emailIsVerified) {
+    dataSources.userAPI
+      .updateUser({ emailVerificationToken: token, uuid })
+      .then((data) => {
+        // Send Verification Link to Email
+        console.log("Verification Email Sent", {
+          data,
+          file: "mutation.js",
+          line: 81,
+        });
+        pubsub.publish("USERSIGNEDUP", { userSignedUp: data });
+      });
+    // }
     return { token, user: { email, uuid, username, roles, emailIsVerified } };
   },
   signIn: async (
