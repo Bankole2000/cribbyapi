@@ -298,14 +298,21 @@ model Contact {
 }
 
 model ListingImage {
-  id    Int    @id @default(autoincrement())
-  uuid  String @default(uuid()) @db.Uuid
-  index Int
-
-  createdAt DateTime @default(now()) @db.Timestamptz(6)
-  updatedAt DateTime @updatedAt
-  Listing   Listing? @relation(fields: [listingId], references: [id])
-  listingId Int?
+  id             Int      @id @default(autoincrement())
+  uuid           String   @default(uuid()) @db.Uuid
+  index          Int
+  originalPath   String
+  originalURL    String
+  thumbnailPath  String
+  thumbnailURL   String
+  mediumSizePath String
+  mediumSizeURL  String
+  largeSizePath  String
+  largeSizeURL   String
+  createdAt      DateTime @default(now()) @db.Timestamptz(6)
+  updatedAt      DateTime @updatedAt
+  Listing        Listing? @relation(fields: [listingId], references: [id])
+  listingId      Int?
 }
 
 model Booking {

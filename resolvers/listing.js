@@ -8,7 +8,6 @@ module.exports = {
     { dataSources },
     info
   ) {
-    console.log({ baseCurrency });
     if (currency && currency !== baseCurrency.code) {
       const { exchangeRate } = await dataSources.fxAPI.getExchangeRate(
         baseCurrency.code,
@@ -115,7 +114,6 @@ module.exports = {
   ) {
     data = { countryCode: locationCountry, stateCode: locationState };
     const stateCities = dataSources.locationAPI.getCitiesByState(data);
-    console.log({ stateCities });
     return _.filter(stateCities, { name: locationCity })[0];
   },
 };

@@ -1,6 +1,8 @@
 const currencyObject = require("../data/currency.json");
 const authUtils = require("../utils/auth");
 const validators = require("../utils/validators");
+const {checkOrCreatePath, processUpload, storeUpload} = require("../utils/fileHandlers");
+const { createWriteStream, mkdir } = require("fs");
 const { AuthenticationError } = require("apollo-server-express");
 const { prisma } = require(".prisma/client");
 const nodemailer = require("nodemailer");
@@ -67,7 +69,6 @@ module.exports = {
       email,
       id,
     });
-    console.log({ res, file: "mutation.js", line: 67 });
     res.cookie("cribbyToken", token, {
       httpOnly: false,
       sameSite: "none",
@@ -97,11 +98,9 @@ module.exports = {
     } catch (err) {
       console.log({ err });
     }
-    // if (!emailIsVerified) {
     dataSources.userAPI
       .updateUser({ emailVerificationToken: token, uuid })
       .then((data) => {
-        // Send Verification Link to Email
         console.log("Verification Email Sent", {
           data,
           file: "mutation.js",
@@ -109,7 +108,6 @@ module.exports = {
         });
         pubsub.publish("USERSIGNEDUP", { userSignedUp: data });
       });
-    // }
     return { token, user: { email, uuid, username, roles, emailIsVerified } };
   },
   signIn: async (
@@ -186,7 +184,6 @@ module.exports = {
         let { uuid } = existingUser;
         signedInUser = await dataSources.userAPI.getUserDetails(uuid);
         let { roles, emailIsVerified, username, email, id } = signedInUser;
-        console.log({ signedInUser, file: "mutation.js", line: 162 });
         const token = authUtils.createToken({
           roles,
           uuid,
@@ -201,7 +198,6 @@ module.exports = {
           sameSite: "none",
           secure: true,
         });
-        console.log({ cookie: res.cookie.token, line: 177 });
         pubsub.publish("USERLOGGEDIN", { userLoggedIn: signedInUser });
         return {
           token,
@@ -215,7 +211,6 @@ module.exports = {
     return dataSources;
   },
   signOut: async (parent, args, { dataSources, req, res, user }, info) => {
-    console.log({ user, file: "mutation.js", line: 190 });
     if (user) {
       const { uuid } = user;
       await dataSources.userAPI.updateUser({
@@ -315,7 +310,7 @@ module.exports = {
         .updateUser({ uuid: updatedUser.uuid, emailVerificationToken: token })
         .then((data) => {
           // TODO: Send user email Confirmation to new email address
-          console.log({ data, file: "mutation.js", line: 290 });
+          console.log(data);
         });
     }
     return updatedUser;
@@ -706,4 +701,35 @@ module.exports = {
       return updatedListing;
     }
   },
+  uploadListingImage: async(parent, { file }, context, info) => {
+  const { createReadStream, filename, mimetype } = await file;
+    
+    console.log(filename, mimetype);
+    if(!validators.isValidImage(mimetype)){
+      throw new Error("Invalid File Type")
+    } 
+    const path = await checkOrCreatePath("", filename);
+    const stream =  createReadStream();
+   file = await  storeUpload(stream, filename, mimetype, path)
+  //  .then(data => {
+  //     console.log({data});
+  //     return data;
+  //   })
+  //   .catch(err => {
+  //     console.log({err});
+  //   })
+    // Create Upload Path
+
+  //  return new Promise((resolve, reject) =>
+  //   stream
+  //     .pipe(createWriteStream("/uploads"))
+  //     .on("finish", () => {
+  //       console.log({stream});
+  //     })
+  //     .on("finish", () => resolve({ id, path, filename, mimetype }))
+  //     .on("error", reject)
+  // );
+
+    return file;
+  }
 };

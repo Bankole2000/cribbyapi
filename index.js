@@ -19,6 +19,7 @@ const pubsub = new PubSub();
 // );
 
 app.use(cookieParser());
+app.use('/uploads', express.static('uploads'))
 
 const authUtil = require("./utils/auth");
 const UserAPI = require("./datasources/users");
@@ -68,7 +69,6 @@ const server = new ApolloServer({
           });
         }
       }
-      console.log("disconnected");
     },
     onConnect: (connectionParams, WebSocket, context) => {
       if (WebSocket.upgradeReq.headers.cookie) {
@@ -76,7 +76,6 @@ const server = new ApolloServer({
           "cribbyToken="
         )[1];
         const user = authUtil.verifyToken(cookie);
-        console.log("ConnectedUser", user, { file: "index.js", line: "75" });
         return { user }; // this is returned as context from the subscriptions object and is available in apollo-server context as connection.context
       }
     },
@@ -118,13 +117,9 @@ server.applyMiddleware({ app });
 const httpServer = http.createServer(app);
 server.installSubscriptionHandlers(httpServer);
 
-// try {
 httpServer.listen(process.env.PORT || 4000, () => {
-  console.log(`Server running at ${process.env.PORT || PORT}`);
+  console.log(`Server running at ${process.env.PORT}`);
 });
-// } catch (err) {
-//
-// }
 
 app.get("/", (req, res) => {
   res.status(200).json({
