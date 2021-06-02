@@ -116,4 +116,16 @@ module.exports = {
     const stateCities = dataSources.locationAPI.getCitiesByState(data);
     return _.filter(stateCities, { name: locationCity })[0];
   },
+  featuredImage({images}, args, context, info){
+    const featuredImage = images.find(image => image.index == 0);
+    if(!featuredImage){
+      return null;
+    }
+    return {title: featuredImage.title, description: featuredImage.description, index: featuredImage.index, image: {...featuredImage}}
+  },
+  images({images}, args, context,info ){
+    return images.map(image => {
+     return {title: image.title, description: image.description, index: image.index, image: {...image}}
+    }).sort((a, b) => a.index - b.index)
+  }
 };

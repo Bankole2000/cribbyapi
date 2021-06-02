@@ -1,7 +1,7 @@
 const currencyObject = require("../data/currency.json");
 const authUtils = require("../utils/auth");
 const validators = require("../utils/validators");
-const {checkOrCreatePath, processUpload, storeUpload} = require("../utils/fileHandlers");
+const {checkOrCreateListingImagePath, createResizedImage, storeUpload, deleteFiles} = require("../utils/fileHandlers");
 const { createWriteStream, mkdir } = require("fs");
 const { AuthenticationError } = require("apollo-server-express");
 const { prisma } = require(".prisma/client");
@@ -701,35 +701,89 @@ module.exports = {
       return updatedListing;
     }
   },
-  uploadListingImage: async(parent, { file }, context, info) => {
-  const { createReadStream, filename, mimetype } = await file;
-    
-    console.log(filename, mimetype);
+  setListingFeaturedImage: async(parent, { file, listingUUID, title, description }, {dataSources}, info) => {
+    const { createReadStream, filename, mimetype } = await file;
     if(!validators.isValidImage(mimetype)){
       throw new Error("Invalid File Type")
     } 
-    const path = await checkOrCreatePath("", filename);
+    const listing = await dataSources.listingAPI.getListingByUUID(listingUUID);
+    if(!listing){
+      throw new Error("No Listing with this UUID");
+    }
+    console.log(listing.images);
+    if(listing.images.length){
+      const oldImage = listing.images.find(image => image.index == 0);
+      // Delete old Images 
+      if(oldImage){
+        const {filePath, thumbnailPath, mediumPath, largePath} = oldImage;
+        await deleteFiles(filePath, thumbnailPath, mediumPath, largePath);
+      }
+    }
+    
+    const paths = await checkOrCreateListingImagePath(listingUUID, filename);
+    // console.log(paths);
     const stream =  createReadStream();
-   file = await  storeUpload(stream, filename, mimetype, path)
-  //  .then(data => {
-  //     console.log({data});
-  //     return data;
-  //   })
-  //   .catch(err => {
-  //     console.log({err});
-  //   })
-    // Create Upload Path
-
-  //  return new Promise((resolve, reject) =>
-  //   stream
-  //     .pipe(createWriteStream("/uploads"))
-  //     .on("finish", () => {
-  //       console.log({stream});
-  //     })
-  //     .on("finish", () => resolve({ id, path, filename, mimetype }))
-  //     .on("error", reject)
-  // );
-
-    return file;
+    file = await storeUpload(stream, filename, mimetype, paths.filePath);
+    const sizes = {
+      thumbnailPath : 150, 
+      mediumPath: 640,
+      largePath: 1200
+    }
+    const sizeValues = Object.keys(sizes);
+    for (let i = 0; i < sizeValues.length; i++) {
+      const size = sizeValues[i];
+      await createResizedImage(file, sizes[size], paths[size]);
+    }
+    listingImage = await dataSources.listingAPI.setListingFeaturedImage(listingUUID, {index: 0, filename: file.filename, title, description, ...paths});
+    
+    return {title: listingImage.title, description: listingImage.description, index: listingImage.index, image: {...listingImage}}
+  },
+  addListingImage: async(parent, {file, listingUUID, title, description}, {dataSources}, info) => {
+    const { createReadStream, filename, mimetype } = await file;
+    if(!validators.isValidImage(mimetype)){
+      throw new Error("Invalid File Type")
+    } 
+    const listing = await dataSources.listingAPI.getListingByUUID(listingUUID);
+    if(!listing){
+      throw new Error("No Listing with this UUID");
+    }
+    let index = 0;
+    if(listing.images.length){
+      const lastIndex = Math.max(...[...listing.images.map(image => image.index)])
+      index = lastIndex + 1;
+      console.log({lastIndex});
+    }
+    const paths = await checkOrCreateListingImagePath(listingUUID, filename);
+    const stream =  createReadStream();
+    file = await storeUpload(stream, filename, mimetype, paths.filePath);
+    const sizes = {
+      thumbnailPath : 150, 
+      mediumPath: 640,
+      largePath: 1200
+    }
+    const sizeValues = Object.keys(sizes);
+    for (let i = 0; i < sizeValues.length; i++) {
+      const size = sizeValues[i];
+      await createResizedImage(file, sizes[size], paths[size]);
+    }
+    if(index == 0){
+      listingImage = await dataSources.listingAPI.setListingFeaturedImage(listingUUID, {index, filename: file.filename, title, description, ...paths});
+      return {title: listingImage.title, description: listingImage.description, index: listingImage.index, image: {...listingImage}}
+    }
+    listingImage = await dataSources.listingAPI.addListingImage(listingUUID, {index, filename: file.filename, title, description, ...paths});
+    return {title: listingImage.title, description: listingImage.description, index: listingImage.index, image: {...listingImage}}
+  }, 
+  updateListingImageInfo: async(parent, {imageUUID, title, description}, {dataSources}, info) => {
+    const updatedImage = await dataSources.listingAPI.updateListingImage(imageUUID, {title, description});
+    return {title: updatedImage.title, description: updatedImage.description, index: updatedImage.index, image: {...updatedImage}};
+  },
+  deleteListingImage: async(parent, {listingUUID, imageUUID}, {dataSources}, info ) => {
+    const updatedImages = await dataSources.listingAPI.deleteListingImage(listingUUID, imageUUID);
+    if(updatedImages.length){
+      return updatedImages.map(image => {
+        return {title: image.title, description: image.description, index: image.index, image: {...image}}
+      })
+    }
+    return updatedImages;
   }
 };

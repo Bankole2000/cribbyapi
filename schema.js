@@ -74,21 +74,24 @@ module.exports = gql`
     addOrUpdateHobby(hobby: HobbyInput): Hobby
     deleteHobby(hobbyId: Int): Hobby
     uploadFile(file: Upload!): File
-    uploadListingImage(file: Upload!, listingUUID: String!): File @requiresLogin
+    setListingFeaturedImage(file: Upload!, listingUUID: String!, title: String, description: String): ListingImage @requiresLogin
+    addListingImage(file:Upload!, listingUUID: String!, title: String, description: String): ListingImage @requiresLogin
+    updateListingImageInfo(imageUUID: String, title: String, description: String): ListingImage @requiresLogin
+    deleteListingImage(listingUUID: String!, imageUUID: String): [ListingImage]
   }
 
   type ImageFile {
     id: ID!
     uuid: String
-    name: String
-    originalPath: String
-    originalURL: String
+    filename: String
+    filePath: String
+    fileURL: String
     thumbnailPath: String
     thumbnailURL: String
-    mediumSizePath: String
-    mediumSizeURL: String
-    largeSizePath: String
-    largeSizeURL: String
+    mediumPath: String
+    mediumURL: String
+    largePath: String
+    largeURL: String
   }
 
   type File {
@@ -467,13 +470,10 @@ module.exports = gql`
   Details of Images associated with posted Listings
   """
   type ListingImage {
-    id: ID!
-    uuid: String
+    title: String
+    description: String
     index: Int
-    createdAt: String
-    updatedAt: String
-    Listing: Listing
-    ListingId: Int
+    image: ImageFile
   }
 
   """
