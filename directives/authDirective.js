@@ -9,7 +9,6 @@ class RequiresLogin extends SchemaDirectiveVisitor {
     field.resolve = async function (...args) {
       const context = args[2];
       const user = context.user;
-      console.log({ field, details, args });
       if (!user) {
         throw new AuthenticationError("You need to be logged in");
       }
@@ -24,7 +23,6 @@ class RequiresAdmin extends SchemaDirectiveVisitor {
     field.resolve = async function (...args) {
       const context = args[2];
       const user = context.user;
-      console.log({ field, details, args });
       if (!user.roles.includes("ADMIN")) {
         throw new AuthenticationError("Requires Admin Role");
       }
@@ -39,7 +37,7 @@ class RequiresSupport extends SchemaDirectiveVisitor {
     field.resolve = async function (...args) {
       const context = args[2];
       const user = context.user;
-      console.log({ field, details, args });
+
       if (!user.roles.includes("SUPPORT") && !user.roles.includes("ADMIN")) {
         throw new AuthenticationError("Requires Support Role");
       }
@@ -54,7 +52,7 @@ class RequiresOwnership extends SchemaDirectiveVisitor {
     field.resolve = async function (...args) {
       const context = args[2];
       const user = context.user;
-      console.log({ field, details, args });
+
       if (!user) {
         throw new AuthenticationError("Requires Resource Ownership");
       }

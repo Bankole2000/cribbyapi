@@ -199,7 +199,7 @@ class UserAPI extends DataSource {
         return updatedUser;
       }
     } catch (err) {
-      console.log({ err, line: 195, file: "users.js" });
+      console.log({ err, line: 202, file: "users.js" });
     }
   }
   async deleteUser({ uuid }) {

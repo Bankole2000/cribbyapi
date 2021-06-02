@@ -8,7 +8,7 @@ module.exports = gql`
 
   type Query {
     """
-    Get all users (Required Admin Access)
+    Get all users (Requires Admin Access)
     """
     users: [User]
     me: User
@@ -31,6 +31,7 @@ module.exports = gql`
     amenityCategories: [ListingAmenityCategory]
     houseRules: [HouseRule]
     hobbies(title: String, description: String, emoticon: String): [Hobby]
+    files: [File!]
   }
 
   type Mutation {
@@ -72,6 +73,32 @@ module.exports = gql`
     """
     addOrUpdateHobby(hobby: HobbyInput): Hobby
     deleteHobby(hobbyId: Int): Hobby
+    uploadFile(file: Upload!): File
+    setListingFeaturedImage(file: Upload!, listingUUID: String!, title: String, description: String): ListingImage @requiresLogin
+    addListingImage(file:Upload!, listingUUID: String!, title: String, description: String): ListingImage @requiresLogin
+    updateListingImageInfo(imageUUID: String, title: String, description: String): ListingImage @requiresLogin
+    deleteListingImage(listingUUID: String!, imageUUID: String): [ListingImage]
+  }
+
+  type ImageFile {
+    id: ID!
+    uuid: String
+    filename: String
+    filePath: String
+    fileURL: String
+    thumbnailPath: String
+    thumbnailURL: String
+    mediumPath: String
+    mediumURL: String
+    largePath: String
+    largeURL: String
+  }
+
+  type File {
+    id: ID!
+    filename: String!
+    mimetype: String!
+    path: String!
   }
 
   type Subscription {
@@ -334,6 +361,7 @@ module.exports = gql`
     isPublished: Boolean
     owner: User
     ownerId: Int
+    featuredImage: ListingImage
     images: [ListingImage]
     bookings: [Booking]
     createdAt: String
@@ -442,13 +470,10 @@ module.exports = gql`
   Details of Images associated with posted Listings
   """
   type ListingImage {
-    id: ID!
-    uuid: String
+    title: String
+    description: String
     index: Int
-    createdAt: String
-    updatedAt: String
-    Listing: Listing
-    ListingId: Int
+    image: ImageFile
   }
 
   """

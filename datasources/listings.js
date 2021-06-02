@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient({});
+const {deleteFiles} = require("../utils/fileHandlers");
 
 const { DataSource } = require("apollo-datasource");
 
@@ -25,6 +26,7 @@ class ListingAPI extends DataSource {
             rule: true,
           },
         },
+        images: true
       },
     });
     return listings;
@@ -53,6 +55,7 @@ class ListingAPI extends DataSource {
       },
       include: {
         owner: true,
+        images: true,
       },
     });
     return listing;
@@ -66,6 +69,7 @@ class ListingAPI extends DataSource {
       data: updateData,
       include: {
         baseCurrency: true,
+        images: true
       },
     });
     return updatedListing;
@@ -155,9 +159,120 @@ class ListingAPI extends DataSource {
           },
         },
         baseCurrency: true,
+        images: true
       },
     });
     return updatedListing;
+  }
+
+  async setListingFeaturedImage(uuid, imageData) {
+    let listingImage;
+    const listing = await prisma.listing.findUnique({
+      where: {
+        uuid
+      }, 
+      include: {
+        images: true
+      }
+    });
+    if(listing.images.length){
+      const oldImage = listing.images.find(image => image.index == 0);
+      if(oldImage){
+        listingImage = await prisma.listingImage.update({
+          where: {id: oldImage.id}, 
+          data: imageData
+        })
+        return listingImage
+      }
+    }
+    listingImage = await prisma.listingImage.create({
+      data: {
+        ...imageData,
+        listing: {
+          connect: {uuid}
+        }
+      } 
+    })
+    return listingImage
+  }
+  async addListingImage(uuid, imageData){
+    const listingImage = await prisma.listingImage.create({
+      data: {
+        ...imageData,
+        listing: {
+          connect: {uuid}
+        }
+      } 
+    })
+    return listingImage
+  }
+  async updateListingImage( imageUUID, imageData){
+    const listingImage = await prisma.listingImage.findUnique({
+      where: {
+        uuid: imageUUID
+      }
+    })
+    if(!listingImage){
+      throw new Error("No listing Image with that UUID");
+    }
+    const updatedImage = await prisma.listingImage.update({
+      data: {...imageData}, 
+      where: {
+        uuid: imageUUID
+      }
+    })
+    return updatedImage
+  }
+  async deleteListingImage(listingUUID, imageUUID){
+    const imageToDelete = await prisma.listingImage.findUnique({
+      where: {
+        uuid: imageUUID
+      }
+    })
+    if(!imageToDelete){
+      throw new Error("No Image with that UUID")
+    }
+    const deletedImage = await prisma.listingImage.delete({
+      where: {
+        uuid: imageUUID
+      }, 
+      select: {
+        index: true
+      }
+    })
+    
+    await prisma.listingImage.updateMany({
+      where: {
+        AND: [
+          {
+            index: {
+              gt: deletedImage.index
+            }
+          }, 
+          {
+            listing: {
+              is: {
+                uuid: listingUUID
+              }
+            }
+          }
+        ]
+      }, 
+      data: {
+        index: {
+          decrement: 1
+        }
+      }
+    })
+    const {images: updatedImages} = await prisma.listing.findUnique({
+      where: {
+        uuid: listingUUID
+      }, 
+      select: {
+        images: true,
+      }
+    })
+    return updatedImages
   }
 }
 

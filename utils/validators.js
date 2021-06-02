@@ -42,3 +42,16 @@ module.exports.isOfAge = (dateLike) => {
 module.exports.isOverADayOld = (lastUpdate) => {
   return Date.now() - Date.parse(lastUpdate) > 86400000 * 4;
 };
+
+module.exports.isValidImage = (mimetype) => {
+  const validMimeTypes = {
+    jpg: "image/jpg", 
+    jpeg: "image/jpeg", 
+    gif: "image/gif", 
+    png: "image/png", 
+    svg: "image/svg+xml", 
+    webp: "image/webp", 
+    bmp: "image/bmp"
+  }
+  return mimetype ? validMimeTypes[mimetype.split('/')[1]] : false;
+}
