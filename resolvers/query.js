@@ -19,6 +19,9 @@ module.exports = {
   currencyCodes: (parent, args, { dataSources }, info) => {
     return dataSources.currencyAPI.getAllCurrencyCodes();
   },
+  countryByCode: (parent, {countryCode}, {dataSources}, info) => {
+    return dataSources.locationAPI.getCountryByCode(countryCode);
+  },
   currencyDetails: (parent, args, { dataSources }, info) => {
     const {
       symbol,
@@ -48,6 +51,12 @@ module.exports = {
   statesByCountry: (parent, args, { dataSources }, info) => {
     return dataSources.locationAPI.getStatesByCountry(args);
   },
+  stateByCode: (parent, args, {dataSources}, info) => {
+    return dataSources.locationAPI.getSingleStateByCodes(args);
+  },
+  stateAddRequests: (parent, {searchText}, {dataSources}, info) => {
+    return dataSources.locationRequestAPI.getStateAddRequests(searchText);
+  },
   citiesByState: (
     parent,
     { countryCode, stateCode },
@@ -56,17 +65,20 @@ module.exports = {
   ) => {
     return dataSources.locationAPI.getCitiesByState({ countryCode, stateCode });
   },
+  cityAddRequests: (parent, {searchText}, {dataSources}, info) => {
+    return dataSources.locationRequestAPI.getCityAddRequests(searchText)
+  },
   continentCodes: (parent, args, { dataSources }, info) => {
     return dataSources.locationAPI.getContinentCodes();
   },
-  amenities: (parent, args, { dataSources }, info) => {
-    return dataSources.amenityAPI.getAmenities();
+  amenities: (parent, {searchText}, { dataSources }, info) => {
+    return dataSources.amenityAPI.getAmenities(searchText);
   },
   amenityCategories: (parent, args, { dataSources }, info) => {
     return dataSources.amenityAPI.getAmenityCategories();
   },
-  houseRules: (parent, args, { dataSources }, info) => {
-    return dataSources.listingAPI.getHouseRules();
+  houseRules: (parent, {searchText}, { dataSources }, info) => {
+    return dataSources.listingAPI.getHouseRules(searchText);
   },
   hobbies: (parent, args, { dataSources }, info) => {
     return dataSources.hobbyAPI.getHobbies(args);

@@ -99,12 +99,36 @@ module.exports = {
     { dataSources },
     info
   ) {
+    if(!locationCountry){
+      return null;
+    }
     const data = { countryCode: locationCountry };
     const countryStates = dataSources.locationAPI.getStatesByCountry(data);
-    return _.filter(countryStates, {
+    if(!countryStates.length){
+      return {
+        name: null,
+        stateCode: locationState, 
+        countryCode: locationCountry,
+        latitude: null,
+        longitude: null,
+      }
+    }
+    const statesInData = _.filter(countryStates, {
       stateCode: locationState,
       countryCode: locationCountry,
-    })[0];
+    });
+    if (statesInData.length){
+      return statesInData[0]
+    }
+    return {
+      name: null,
+      stateCode: locationState,
+      
+      countryName: null, 
+      countryCode: locationCountry,
+      latitude: null,
+      longitude: null,
+    }
   },
   locationCity(
     { locationState, locationCountry, locationCity },
@@ -112,9 +136,35 @@ module.exports = {
     { dataSources },
     info
   ) {
+    if(!locationState){
+      return null;
+    }
     data = { countryCode: locationCountry, stateCode: locationState };
     const stateCities = dataSources.locationAPI.getCitiesByState(data);
-    return _.filter(stateCities, { name: locationCity })[0];
+    if(!stateCities.length){
+      return {
+        name: locationCity,
+        stateCode: locationState,
+        stateName: null,
+        countryName: null,
+        countryCode: locationCountry,
+        latitude: null, 
+        longitude: null,
+      }  
+    }
+    const citiesInData = _.filter(stateCities, { name: locationCity });
+    if(citiesInData.length){
+      return citiesInData[0];
+    }
+    return {
+      name: locationCity,
+      stateCode: locationState,
+      stateName: null,
+      countryName: null,
+      countryCode: locationCountry,
+      latitude: null, 
+      longitude: null,
+    }  
   },
   featuredImage({images}, args, context, info){
     const featuredImage = images.find(image => image.index == 0);

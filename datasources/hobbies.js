@@ -12,11 +12,39 @@ class HobbiesAPI extends DataSource {
   initialize(config) {}
 
   async getHobbies(args) {
-    const hobbies = await prisma.hobby.findMany({
+    let hobbies, {searchText} = args;
+
+    if(!searchText){
+      hobbies = await prisma.hobby.findMany({
+        include: {
+          profiles: true,
+        },
+      });
+      return hobbies
+    }
+
+    hobbies = await prisma.hobby.findMany({
+      where: {
+        OR: [
+          {
+            title: {
+              contains: searchText, 
+              mode: 'insensitive'
+            }
+          },
+          {
+            description: {
+              contains: searchText,
+              mode: 'insensitive'
+            },
+          },
+        ],
+      }, 
       include: {
         profiles: true,
-      },
-    });
+      }
+    })
+    
     return hobbies;
   }
 
@@ -39,6 +67,20 @@ class HobbiesAPI extends DataSource {
     } catch (error) {
       console.log({ error });
       throw new Error("Required Details are missing");
+    }
+  }
+  async deleteHobby(args){
+    let {hobbyId: id} = args; 
+    try {
+      const deletedHobby = await prisma.hobby.delete({
+        where: {
+          id
+        }
+      })
+      return deletedHobby;
+    } catch (err) {
+      console.log({err});
+      throw new Error("couldn't delete Hobby")
     }
   }
 }

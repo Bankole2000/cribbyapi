@@ -87,16 +87,48 @@ class ListingAPI extends DataSource {
     return deletedListingHouseRules;
   }
 
-  async getHouseRules() {
-    const houseRules = await prisma.houseRule.findMany({
+  async getHouseRules(searchText) {
+    let houseRules;
+    if(!searchText){
+      houseRules = await prisma.houseRule.findMany({
+        include: {
+          listings: true,
+        },
+      });
+      return houseRules;
+    }
+    houseRules = await prisma.houseRule.findMany({
+      where: {
+        OR: [
+          {
+            title: {
+              contains: searchText,
+              mode: "insensitive"
+            }
+          }, 
+          {
+            description: {
+              contains: searchText, 
+              mode: 'insensitive'
+            }
+          }, 
+          {
+            code: {
+              contains: searchText, 
+              mode: 'insensitive'
+            }
+          }
+        ]
+      }, 
       include: {
-        listings: true,
-      },
-    });
+        listings: true
+      }
+    })
     return houseRules;
   }
 
   async addHouseRule(houseRuledata) {
+    delete houseRuledata.id;
     const newHouseRule = await prisma.houseRule.create({
       data: houseRuledata,
     });
@@ -123,10 +155,10 @@ class ListingAPI extends DataSource {
     });
     return updatedHouseRule;
   }
-  async deleteHouseRule(uuid) {
+  async deleteHouseRule(id) {
     const deletedHouseRule = await prisma.houseRule.delete({
       where: {
-        uuid,
+        id,
       },
     });
     return deletedHouseRule;
@@ -272,7 +304,7 @@ class ListingAPI extends DataSource {
         images: true,
       }
     })
-    return updatedImages
+    return {updatedImages, imageToDelete}
   }
 }
 

@@ -176,8 +176,15 @@ model Listing {
   streetAddress               String?
   listingPurpose              String?               @db.VarChar(255)
   listingType                 String?               @db.VarChar(255)
+  listingKind                 String?
+  listingKindCode             String?
+  listingSubgroup             String?
   latitude                    Decimal?
   longitude                   Decimal?
+  noOfBedrooms                Int?
+  noOfBathrooms               Int?
+  idealForSleeping            Boolean?              @default(true)
+  beds                        Json                  @default("[]") @db.Json
   amenities                   Amenity[]
   specialFeatures             String[]
   guestPreferences            String[]
@@ -344,4 +351,29 @@ enum Role {
   AGENT
   SUPPORT
   ADMIN
+}
+
+model CityAddRequest {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique @default(uuid())
+  name        String   @db.VarChar(255)
+  stateCode   String   @db.VarChar(2)
+  stateName   String   @db.VarChar(255)
+  countryCode String   @db.VarChar(2)
+  countryName String   @db.VarChar(255)
+  latitude    Float?
+  longitude   Float?
+  addedToData Boolean? @default(false)
+}
+
+model StateAddRequest {
+  id          Int      @id @default(autoincrement())
+  uuid        String   @unique @default(uuid())
+  name        String   @db.VarChar(255)
+  stateCode   String   @db.VarChar(2)
+  countryCode String   @db.VarChar(2)
+  countryName String   @db.VarChar(255)
+  latitude    Float?
+  longitude   Float?
+  addedToData Boolean? @default(false)
 }

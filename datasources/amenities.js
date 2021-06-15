@@ -10,13 +10,37 @@ class AmenitiesAPI extends DataSource {
   }
   initialize(config) {}
 
-  async getAmenities(args) {
-    // const amenities = await prisma.
-    const amenities = await prisma.amenity.findMany({
+  async getAmenities(searchText) {
+    let amenities; 
+    if(!searchText){
+      amenities = await prisma.amenity.findMany({
+        include: {
+          category: true,
+        },
+      });
+      return amenities;
+    }
+    amenities = await prisma.amenity.findMany({
+      where: {
+        OR: [
+          {
+            title: {
+              contains: searchText, 
+              mode: "insensitive",
+            }
+          }, 
+          {
+            description: {
+              contains: searchText, 
+              mode: "insensitive"
+            }
+          }
+        ]
+      }, 
       include: {
         category: true,
-      },
-    });
+      }
+    })
     return amenities;
   }
   async getAmenityCategories(args) {
@@ -39,8 +63,12 @@ class AmenitiesAPI extends DataSource {
     return amenityCategory;
   }
   async addAmenityCategory(data) {
+    const {title, description} = data
     const amenityCategory = await prisma.amenityCategory.create({
-      data,
+      data: {
+        title, 
+        description
+      }
     });
     return amenityCategory;
   }
@@ -58,16 +86,26 @@ class AmenitiesAPI extends DataSource {
     });
     return updatedAmenityCategory;
   }
-  async deleteAmenityCategory(args) {
-    console.log(args);
+  async deleteAmenityCategory({categoryId}) {
+    const deletedAmenityCategory = await prisma.amenityCategory.delete({
+      where: {
+        id: categoryId
+      }
+    })
+    return deletedAmenityCategory
   }
   async addAmenity(data) {
     const { categoryId } = data;
-    data.category = {
-      connect: {
-        id: categoryId,
-      },
-    };
+    if(categoryId){
+
+      data.category = {
+        connect: {
+          id: Number(categoryId),
+        },
+      };
+    }
+    delete data.id;
+    data.categoryId = Number(data.categoryId); 
     const newAmenity = await prisma.amenity.create({
       data,
     });
@@ -78,11 +116,12 @@ class AmenitiesAPI extends DataSource {
     if (categoryId) {
       amenityData.category = {
         connect: {
-          id: categoryId,
+          id: Number(categoryId),
         },
       };
     }
     delete amenityData.id;
+    amenityData.categoryId = Number(amenityData.categoryId)
     const updatedAmenity = await prisma.amenity.update({
       where: {
         id,
@@ -105,7 +144,13 @@ class AmenitiesAPI extends DataSource {
     return amenity;
   }
   async deleteAmenity(args) {
-    console.log(args);
+    const {amenityId} = args;
+    const deletedAmenity = await prisma.amenity.delete({
+      where: {
+        id: amenityId
+      }
+    })
+    return deletedAmenity;
   }
 }
 

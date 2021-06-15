@@ -381,7 +381,7 @@ module.exports = {
   addListing: async (
     parent,
     { listing },
-    { dataSources, req, res, user },
+    { dataSources, req, res, user, pubsub },
     info
   ) => {
     const { uuid } = user;
@@ -443,15 +443,17 @@ module.exports = {
         });
       }
     }
-    const newListing = dataSources.listingAPI.createListing({ uuid, listing });
+    const newListing = await dataSources.listingAPI.createListing({ uuid, listing });
+    pubsub.publish('LISTINGADDED', {listingAdded : newListing});
     return newListing;
   },
   updateListing: async (
     parent,
-    { listingUUID: uuid, updateData },
+    { listingUUID, updateData },
     { dataSources, user, res, req },
     info
   ) => {
+    let uuid = listingUUID;
     const listingToUpdate = await dataSources.listingAPI.getListingByUUID(uuid);
     if (!listingToUpdate) {
       throw new Error("No Listing with that UUID");
@@ -538,6 +540,7 @@ module.exports = {
       uuid,
       updateData,
     });
+    console.log({updatedListing});
     return updatedListing;
   },
   deleteListing: async (
@@ -556,7 +559,7 @@ module.exports = {
   addOrUpdateAmenityCategory: async (
     parent,
     { categoryData },
-    { dataSources },
+    { dataSources, pubsub },
     info
   ) => {
     let amenityCategory;
@@ -575,20 +578,28 @@ module.exports = {
           categoryData,
         }
       );
+      pubsub.publish('AMENITYCATEGORYADDED', {amenityCategoryAdded: updatedAmenityCategory})
       return updatedAmenityCategory;
     }
     amenityCategory = await dataSources.amenityAPI.addAmenityCategory(
       categoryData
     );
+    pubsub.publish('AMENITYCATEGORYADDED', {amenityCategoryAdded: amenityCategory})
     return amenityCategory;
   },
-  deleteAmenityCategory: async (parent, args, context, info) => {
-    console.log(args);
+  deleteAmenityCategory: async (parent, args, {dataSources}, info) => {
+    try {
+      let deletedCategory = await dataSources.amenityAPI.deleteAmenityCategory(args);
+      return deletedCategory
+    } catch (err) {
+      console.log({err});
+      throw new Error("Unable to delete Category")
+    }
   },
   addOrUpdateAmenity: async (
     parent,
     { amenityData },
-    { dataSources },
+    { dataSources, pubsub },
     info
   ) => {
     const { id } = amenityData;
@@ -604,18 +615,21 @@ module.exports = {
         id: Number(id),
         amenityData,
       });
+      pubsub.publish('AMENITYADDED', { amenityAdded: updatedAmenity});
       return updatedAmenity;
     }
     const newAmenity = await dataSources.amenityAPI.addAmenity(amenityData);
+    pubsub.publish('AMENITYADDED', { amenityAdded: newAmenity});
     return newAmenity;
   },
-  deleteAmenity: async (parent, args, context, info) => {
-    console.log(args);
+  deleteAmenity: async (parent, args, {dataSources}, info) => {
+    const deletedAmenity = await dataSources.amenityAPI.deleteAmenity(args);
+    return deletedAmenity
   },
   addOrUpdateHouseRule: async (
     parent,
     { houseRuleData },
-    { dataSources },
+    { dataSources, pubsub },
     info
   ) => {
     const { id } = houseRuleData;
@@ -632,23 +646,25 @@ module.exports = {
         id: Number(id),
         houseRuleData,
       });
+      pubsub.publish('HOUSERULEADDED', {houseRuleAdded: updatedHouseRule})
       return updatedHouseRule;
     }
     const newHouseRule = await dataSources.listingAPI.addHouseRule(
       houseRuleData
     );
+    pubsub.publish('HOUSERULEADDED', {houseRuleAdded: newHouseRule})
     return newHouseRule;
   },
-  deleteHouseRule: async (parent, { houseRuleUUID }, { dataSources }, info) => {
+  deleteHouseRule: async (parent, { houseRuleId }, { dataSources }, info) => {
     const deletedHouseRule = await dataSources.listingAPI.deleteHouseRule(
-      houseRuleUUID
+      houseRuleId
     );
     return deletedHouseRule;
   },
   addOrUpdateHobby: async (
     parent,
     { hobby: hobbyData },
-    { dataSources },
+    { dataSources, pubsub },
     info
   ) => {
     const { id, title, description, emoticon } = hobbyData;
@@ -656,11 +672,13 @@ module.exports = {
       id,
       data: { title, description, emoticon },
     });
-
+    pubsub.publish('HOBBYADDED', { hobbyAdded: hobby })
     return hobby;
   },
-  deleteHobby: async (parent, args, context, info) => {
-    console.log(args);
+  deleteHobby: async (parent, args, {dataSources}, info) => {
+    // console.log(args);
+    const deletedHobby = await dataSources.hobbyAPI.deleteHobby(args); 
+    return deletedHobby
   },
   toggleListingPublishedStatus: async (
     parent,
@@ -778,12 +796,38 @@ module.exports = {
     return {title: updatedImage.title, description: updatedImage.description, index: updatedImage.index, image: {...updatedImage}};
   },
   deleteListingImage: async(parent, {listingUUID, imageUUID}, {dataSources}, info ) => {
-    const updatedImages = await dataSources.listingAPI.deleteListingImage(listingUUID, imageUUID);
-    if(updatedImages.length){
+    const {updatedImages, imageToDelete} = await dataSources.listingAPI.deleteListingImage(listingUUID, imageUUID);
+    if(imageToDelete){
+      const {filePath, thumbnailPath, mediumPath, largePath} = imageToDelete;
+      await deleteFiles(filePath, thumbnailPath, mediumPath, largePath);
+    }
+    if(updatedImages && updatedImages.length){
       return updatedImages.map(image => {
         return {title: image.title, description: image.description, index: image.index, image: {...image}}
       })
     }
     return updatedImages;
+  }, 
+  addOrUpdateStateRequest: async(parent, {stateData}, {dataSources, pubsub}, info) => {
+    console.log({stateData});
+    const stateAddRequest = await dataSources.locationRequestAPI.addOrUpdateStateAddRequest(stateData);
+    pubsub.publish('STATEADDREQUESTADDED', {stateAddRequestAdded: stateAddRequest});
+    return stateAddRequest
+  }, 
+  addOrUpdateCityRequest: async(parent, {cityData}, {dataSources, pubsub}, info) => {
+    console.log({cityData});
+    const cityAddRequest = await dataSources.locationRequestAPI.addOrUpdateCityAddRequest(cityData)
+    pubsub.publish('CITYADDREQUESTADDED', {cityAddRequestAdded: cityAddRequest});
+    return cityAddRequest
+  }, 
+  deleteStateAddRequest: async(parent, {stateAddRequestId}, {dataSources}, info) => {
+    console.log({stateAddRequestId});
+    const deletedStateAddRequest = await dataSources.locationRequestAPI.deleteStateAddRequest(stateAddRequestId)
+    return deletedStateAddRequest
+  }, 
+  deleteCityAddRequest: async(parent, {cityAddRequestId}, {dataSources}, info) => {
+    console.log({cityAddRequestId});
+    const deletedCityAddRequest = await dataSources.locationRequestAPI.deleteCityAddRequest(cityAddRequestId)
+    return deletedCityAddRequest
   }
 };
