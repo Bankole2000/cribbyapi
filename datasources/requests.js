@@ -49,43 +49,48 @@ class LocationRequestAPI extends DataSource {
   }
 
   async getCityAddRequests(searchText){
-    const cityAddRequests = await prisma.cityAddRequest.findMany({
-      where: {
-        OR: [
-          {
-            name: {
-              contains: searchText, 
-              mode: 'insensitive'
+    let cityAddRequests;
+    if(searchText){
+      cityAddRequests = await prisma.cityAddRequest.findMany({
+        where: {
+          OR: [
+            {
+              name: {
+                contains: searchText, 
+                mode: 'insensitive'
+              }
+            }, 
+            {
+              stateCode: {
+                contains: searchText, 
+                mode: 'insensitive'
+              }
+            },
+            {
+              stateName: {
+                contains: searchText, 
+                mode: 'insensitive'
+              }
+            },
+            {
+              countryCode: {
+                contains: searchText, 
+                mode: 'insensitive'
+              }
+            }, 
+            {
+              countryName: {
+                contains: searchText, 
+                mode: 'insensitive'
+              }
             }
-          }, 
-          {
-            stateCode: {
-              contains: searchText, 
-              mode: 'insensitive'
-            }
-          },
-          {
-            stateName: {
-              contains: searchText, 
-              mode: 'insensitive'
-            }
-          },
-          {
-            countryCode: {
-              contains: searchText, 
-              mode: 'insensitive'
-            }
-          }, 
-          {
-            countryName: {
-              contains: searchText, 
-              mode: 'insensitive'
-            }
-          }
-        ]
-      }
-    })
-    return cityAddRequests;
+          ]
+        }
+      })
+      return cityAddRequests;
+    }
+   cityAddRequests = await prisma.cityAddRequest.findMany({})
+   return cityAddRequests
   }
 
   async addOrUpdateStateAddRequest(data){
