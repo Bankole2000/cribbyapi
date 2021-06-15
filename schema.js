@@ -12,8 +12,9 @@ module.exports = gql`
     """
     users: [User]
     me: User
-    listings: [Listing]
+    listings: [Listing] @requiresLogin
     currencies: [Currency]
+    countryByCode(countryCode: String): Country
     countries(
       name: String
       currencyCode: CurrencyCode
@@ -24,13 +25,16 @@ module.exports = gql`
     currencyCodes: [CurrencyCode]
     countryCodes: [CountryCode]
     statesByCountry(countryCode: CountryCode!): [State]
+    stateByCode(countryCode: String, stateCode: String): State
+    stateAddRequests(searchText: String): [StateAddRequest]
     citiesByState(countryCode: CountryCode!, stateCode: String!): [City]
+    cityAddRequests(searchText: String): [CityAddRequest]
     continentCodes: [ContinentCode]
     currencyDetails(code: CurrencyCode): Currency
-    amenities: [ListingAmenity]
+    amenities(searchText: String): [ListingAmenity]
     amenityCategories: [ListingAmenityCategory]
-    houseRules: [HouseRule]
-    hobbies(title: String, description: String, emoticon: String): [Hobby]
+    houseRules(searchText: String): [HouseRule]
+    hobbies(title: String, description: String, emoticon: String, searchText: String): [Hobby]
     files: [File!]
   }
 
@@ -67,7 +71,7 @@ module.exports = gql`
     addOrUpdateAmenity(amenityData: ListingAmenityInput): ListingAmenity
     deleteAmenity(amenityId: Int): ListingAmenity
     addOrUpdateHouseRule(houseRuleData: HouseRuleInput): HouseRule
-    deleteHouseRule(houseRuleUUID: String!): HouseRule
+    deleteHouseRule(houseRuleId: Int): HouseRule
     """
     Add or Update Hobbies (include ID (id) field to update, exclude to create)
     """
@@ -76,6 +80,10 @@ module.exports = gql`
     uploadFile(file: Upload!): File
     setListingFeaturedImage(file: Upload!, listingUUID: String!, title: String, description: String): ListingImage @requiresLogin
     addListingImage(file:Upload!, listingUUID: String!, title: String, description: String): ListingImage @requiresLogin
+    addOrUpdateStateRequest(stateData: StateAddRequestInput): StateAddRequest
+    addOrUpdateCityRequest(cityData: CityAddRequestInput): CityAddRequest
+    deleteStateAddRequest(stateAddRequestId: ID): StateAddRequest
+    deleteCityAddRequest(cityAddRequestId: ID): CityAddRequest
     updateListingImageInfo(imageUUID: String, title: String, description: String): ListingImage @requiresLogin
     deleteListingImage(listingUUID: String!, imageUUID: String): [ListingImage]
   }
@@ -104,6 +112,13 @@ module.exports = gql`
   type Subscription {
     userLoggedIn: User
     userSignedUp: User
+    hobbyAdded: Hobby
+    amenityAdded: ListingAmenity
+    amenityCategoryAdded: ListingAmenityCategory
+    houseRuleAdded: HouseRule
+    listingAdded: Listing
+    cityAddRequestAdded: CityAddRequest
+    stateAddRequestAdded: StateAddRequest
   }
 
   """
@@ -344,6 +359,10 @@ module.exports = gql`
     pricePerWeek(currency: CurrencyCode!): Float
     pricePerMonth(currency: CurrencyCode!): Float
     guestCapacity: Int
+    noOfBedrooms: Int
+    noOfBathrooms: Int
+    idealForSleeping: Boolean
+    beds: [Bed]
     guestArrivalDaysNotice: Int
     guestBookingMonthsInAdvance: Int
     bookingStayDaysMin: Int
@@ -351,10 +370,14 @@ module.exports = gql`
     locationCountry: Country
     locationState: State
     locationCity: City
+    streetAddress: String
     latitude: Float
     longitude: Float
     listingPurpose: String
     listingType: String
+    listingKind: String
+    listingKindCode: String
+    listingSubgroup: String
     amenities: [ListingAmenity]
     specialFeatures: [String]
     guestPreferences: [String]
@@ -381,6 +404,10 @@ module.exports = gql`
     pricePerMonth: Float
     guestCapacity: Int
     guestArrivalDaysNotice: Int
+    noOfBedrooms: Int
+    noOfBathrooms: Int
+    idealForSleeping: Boolean
+    beds: [BedInput]
     guestBookingMonthsInAdvance: Int
     bookingStayDaysMin: Int
     bookingStayDaysMax: Int
@@ -390,12 +417,25 @@ module.exports = gql`
     streetAddress: String
     listingPurpose: ListingPurpose
     listingType: ListingType
+    listingKind: String
+    listingKindCode: String
+    listingSubgroup: String
     latitude: Float
     longitude: Float
     houseRules: [hasHouseRuleInput]
     amenities: [Int]
     specialFeatures: [String]
     guestPreferences: [String]
+  }
+
+  type Bed {
+    type: String
+    quantity: Int
+  }
+
+  input BedInput {
+    type: String
+    quantity: Int
   }
 
   type ListingAmenity {
@@ -414,7 +454,7 @@ module.exports = gql`
     description: String
     faIcon: String
     mdiIcon: String
-    categoryId: Int
+    categoryId: ID
   }
 
   type ListingAmenityCategory {
@@ -508,7 +548,7 @@ module.exports = gql`
     nativeSymbol: String
     code: CurrencyCode
     decimalDigits: Int
-    rounding: Int
+    rounding: Float
   }
 
   type Country {
@@ -539,6 +579,29 @@ module.exports = gql`
     cities: [City]
   }
 
+  type StateAddRequest {
+    id: ID
+    uuid: String
+    name: String
+    stateCode: String
+    countryCode: CountryCode
+    countryName: String
+    latitude: Float
+    longitude: Float
+    addedToData: Boolean
+  }
+
+  input StateAddRequestInput {
+    id: ID
+    name: String
+    stateCode: String
+    countryCode: CountryCode
+    countryName: String
+    latitude: Float
+    longitude: Float
+    addedToData: Boolean
+  }
+
   type City {
     name: String
     stateCode: String
@@ -547,6 +610,32 @@ module.exports = gql`
     countryName: String
     latitude: Float
     longitude: Float
+    addedToData: Boolean
+  }
+
+  type CityAddRequest{
+    id: ID
+    uuid: String
+    name: String
+    stateCode: String
+    stateName: String
+    countryCode: CountryCode
+    countryName: String
+    latitude: Float
+    longitude: Float
+    addedToData: Boolean
+  }
+
+  input CityAddRequestInput{
+    id: ID
+    name: String
+    stateCode: String
+    stateName: String
+    countryCode: CountryCode
+    countryName: String
+    latitude: Float
+    longitude: Float
+    addedToData: Boolean
   }
 
   """

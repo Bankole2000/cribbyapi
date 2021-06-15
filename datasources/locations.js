@@ -102,6 +102,25 @@ class LocationAPI extends DataSource {
       });
     return allStates;
   }
+  getSingleStateByCodes({countryCode, stateCode}){
+    const matchingStates = statesArray
+      .filter((state) => state.country_code === countryCode && state.state_code === stateCode)
+      .map((state) => {
+        const { name, country_code, state_code, latitude, longitude } = state;
+        return {
+          name,
+          countryCode,
+          stateCode: state_code,
+          latitude,
+          longitude,
+          countryName: countryCodeToName[country_code],
+        };
+      });
+    if(matchingStates.length){
+      return matchingStates[0]
+    }
+    return null;
+  }
   getCitiesByState({ countryCode, stateCode }) {
     return citiesArray
       .filter((city) => {
