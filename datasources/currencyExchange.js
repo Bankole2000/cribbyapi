@@ -16,15 +16,31 @@ class FXAPI extends RESTDataSource {
   }
 
   async getExchangeRate(from, to) {
+    console.log({from, to});
     const storedExchangeRate = await prisma.exchangeRate.findFirst({
       where: {
-        from,
-        to,
+        AND: [
+          {
+            from: {
+              equals: from,
+            },
+          },
+          {
+            to: {
+              equals: to,
+            },
+          },
+        ],
       },
     });
+ 
+    if(storedExchangeRate){
+      return storedExchangeRate;
+    }
+    console.log({storedExchangeRate});
     if (!storedExchangeRate) {
-      const { conversion_rates: newExchangeRate } = await this.get(`/${to}`);
-
+      const { conversion_rates: newExchangeRate } = await this.get(`/${String(to)}`)
+      console.log({newExchangeRate});
       let currentExchangeRate = await prisma.exchangeRate.create({
         data: {
           from,
@@ -32,8 +48,10 @@ class FXAPI extends RESTDataSource {
           exchangeRate: 1 / newExchangeRate[from],
         },
       });
+      console.log({currentExchangeRate});
       return currentExchangeRate;
     }
+
     if (isOverADayOld(storedExchangeRate.updatedAt)) {
       const { conversion_rates: newExchangeRate } = await this.get(`/${to}`);
       let currentExchangeRate = await prisma.exchangeRate.update({
@@ -46,6 +64,7 @@ class FXAPI extends RESTDataSource {
       });
       return currentExchangeRate;
     }
+    
     return storedExchangeRate;
   }
 }

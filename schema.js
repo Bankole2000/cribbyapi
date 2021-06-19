@@ -379,6 +379,7 @@ module.exports = gql`
     listingKindCode: String
     listingSubgroup: String
     amenities: [ListingAmenity]
+    allowedSpaces: [String]
     specialFeatures: [String]
     guestPreferences: [String]
     isPublished: Boolean
@@ -424,6 +425,7 @@ module.exports = gql`
     longitude: Float
     houseRules: [hasHouseRuleInput]
     amenities: [Int]
+    allowedSpaces: [String]
     specialFeatures: [String]
     guestPreferences: [String]
   }

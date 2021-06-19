@@ -8,7 +8,7 @@ module.exports = {
     { dataSources },
     info
   ) {
-    if (currency && currency !== baseCurrency.code) {
+    if (currency && currency != baseCurrency.code) {
       const { exchangeRate } = await dataSources.fxAPI.getExchangeRate(
         baseCurrency.code,
         currency
@@ -25,7 +25,7 @@ module.exports = {
     { dataSources },
     info
   ) {
-    if (currency && currency !== baseCurrency.code) {
+    if (currency && currency != baseCurrency.code) {
       const { exchangeRate } = await dataSources.fxAPI.getExchangeRate(
         baseCurrency.code,
         currency

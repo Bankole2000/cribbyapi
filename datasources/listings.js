@@ -26,7 +26,8 @@ class ListingAPI extends DataSource {
             rule: true,
           },
         },
-        images: true
+        images: true, 
+        amenities: true,
       },
     });
     return listings;
@@ -56,7 +57,9 @@ class ListingAPI extends DataSource {
       include: {
         owner: true,
         images: true,
+        amenities: true
       },
+
     });
     return listing;
   }
@@ -69,7 +72,8 @@ class ListingAPI extends DataSource {
       data: updateData,
       include: {
         baseCurrency: true,
-        images: true
+        images: true,
+        amenities: true,
       },
     });
     return updatedListing;
