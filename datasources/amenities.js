@@ -108,6 +108,9 @@ class AmenitiesAPI extends DataSource {
     data.categoryId = Number(data.categoryId); 
     const newAmenity = await prisma.amenity.create({
       data,
+      include: {
+        category: true
+      }
     });
     return newAmenity;
   }
@@ -140,6 +143,9 @@ class AmenitiesAPI extends DataSource {
       where: {
         id,
       },
+      include: {
+        category: true
+      }
     });
     return amenity;
   }

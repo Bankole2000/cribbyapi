@@ -40,7 +40,7 @@ module.exports.isOfAge = (dateLike) => {
 };
 
 module.exports.isOverADayOld = (lastUpdate) => {
-  return Date.now() - Date.parse(lastUpdate) > 86400000 * 4;
+  return lastUpdate ? Date.now() - Date.parse(lastUpdate) > 86400000 * 4 : false;
 };
 
 module.exports.isValidImage = (mimetype) => {

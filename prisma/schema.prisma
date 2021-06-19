@@ -171,7 +171,7 @@ model Listing {
   bookingStayDaysMin          Int?
   bookingStayDaysMax          Int?
   locationCountry             String?               @db.VarChar(2)
-  locationState               String?               @db.VarChar(2)
+  locationState               String?               @db.VarChar(5)
   locationCity                String?
   streetAddress               String?
   listingPurpose              String?               @db.VarChar(255)
@@ -186,6 +186,7 @@ model Listing {
   idealForSleeping            Boolean?              @default(true)
   beds                        Json                  @default("[]") @db.Json
   amenities                   Amenity[]
+  allowedSpaces               String[]
   specialFeatures             String[]
   guestPreferences            String[]
   isPublished                 Boolean?              @default(false) @db.Boolean
