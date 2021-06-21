@@ -187,6 +187,7 @@ model Listing {
   beds                        Json                  @default("[]") @db.Json
   amenities                   Amenity[]
   allowedSpaces               String[]
+  guestsShouldKnow            Json                  @default("[]") @db.Json
   specialFeatures             String[]
   guestPreferences            String[]
   isPublished                 Boolean?              @default(false) @db.Boolean

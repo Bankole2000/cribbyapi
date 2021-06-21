@@ -12,7 +12,7 @@ module.exports = gql`
     """
     users: [User]
     me: User
-    listings: [Listing] @requiresLogin
+    listings(id: ID, uuid: String, title: String): [Listing] @requiresLogin
     currencies: [Currency]
     countryByCode(countryCode: String): Country
     countries(
@@ -352,6 +352,7 @@ module.exports = gql`
     shortDescription: String
     longDescription: String
     additionalRules: [String]
+    guestsShouldKnow: [GuestsShouldKnowInfo]
     houseRules: [hasHouseRule]
     baseCurrency: Currency
     basicPrice(currency: CurrencyCode!): Float
@@ -398,6 +399,7 @@ module.exports = gql`
     shortDescription: String
     longDescription: String
     additionalRules: [String]
+    guestsShouldKnow: [GuestsShouldKnowInfoInput]
     baseCurrency: CurrencyCode
     basicPrice: Float
     pricePerWeekend: Float
@@ -428,6 +430,20 @@ module.exports = gql`
     allowedSpaces: [String]
     specialFeatures: [String]
     guestPreferences: [String]
+  }
+
+  type GuestsShouldKnowInfo {
+    id: ID
+    info: String
+    title: String
+    description: String
+  }
+
+  input GuestsShouldKnowInfoInput {
+    id: ID 
+    info: String
+    title: String
+    description: String
   }
 
   type Bed {

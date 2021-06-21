@@ -1,3 +1,5 @@
+const _ = require('lodash');
+
 module.exports = {
   users: (parent, args, context, info) => {
     return context.dataSources.userAPI.getAllUsers(args);
@@ -10,8 +12,10 @@ module.exports = {
       user: undefined,
     };
   },
-  listings: (parent, args, { dataSources }, info) => {
-    return dataSources.listingAPI.getListings(args);
+  listings: async (parent, args, { dataSources }, info) => {
+    const listings = await dataSources.listingAPI.getListings(args);
+    return listings;
+    // return _.filter(listings, args);
   },
   currencies: (parent, args, { dataSources }, info) => {
     return dataSources.currencyAPI.getAllCurrencyDetails();
