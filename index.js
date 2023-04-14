@@ -165,8 +165,8 @@ server.installSubscriptionHandlers(httpServer);
 app.get("/", (req, res) => {
   res.status(200).json({
     message: "Welcome to the Cribby API",
-    graphQLRemote: "https://cribba-api.herokuapp.com/graphql",
-    graphQLLocal: "http://localhost:4000/graphql",
+    graphQLRemote: `https://${process.env.DOMAIN}/graphql`,
+    graphQLLocal: `http://${process.env.DOMAIN}/graphql`,
   });
 });
 
