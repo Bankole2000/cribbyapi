@@ -12,7 +12,7 @@ const pubsub = new PubSub();
 const cors = require("cors");
 
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:5501", "https://bankole2000.github.io", "http://localhost:8081"], 
+  origin: ["http://localhost:3000", "http://localhost:5501", "https://bankole2000.github.io", "http://localhost:8081"],
   credentials: true
 }));
 // app.use(
@@ -57,8 +57,9 @@ const dataSources = () => ({
 
 const server = new ApolloServer({
   cors: {
-		origin: ['http://localhost:3000', "http://localhost:8081"],
-		credentials: true},
+    origin: ['http://localhost:3000', "http://localhost:8081", "*"],
+    credentials: true
+  },
   typeDefs,
   resolvers,
   dataSources,
@@ -69,7 +70,7 @@ const server = new ApolloServer({
           "cribbyToken="
         )[1];
         let user;
-        if(cookie){
+        if (cookie) {
           user = authUtil.verifyToken(cookie);
         }
         if (user) {
@@ -82,7 +83,7 @@ const server = new ApolloServer({
               lastSeen: new Date(),
             });
           } catch (err) {
-            console.log({err});
+            console.log({ err });
           }
         }
       }
@@ -93,7 +94,7 @@ const server = new ApolloServer({
           "cribbyToken="
         )[1];
         const user = authUtil.verifyToken(cookie);
-        if(user){
+        if (user) {
           const { uuid } = user;
           try {
             await dataSources().userAPI.updateUser({
@@ -102,13 +103,13 @@ const server = new ApolloServer({
               lastSeen: new Date(),
             });
           } catch (err) {
-            console.log({err});
+            console.log({ err });
           }
         }
         return { user }; // this is returned as context from the subscriptions object and is available in apollo-server context as connection.context
       }
     },
-    
+
   },
   schemaDirectives: {
     requiresLogin: RequiresLogin,
@@ -145,14 +146,14 @@ const server = new ApolloServer({
   // playground: false,
 });
 
-server.applyMiddleware({ app, cors: {origin: ["http://localhost:3000", "http://localhost:8081", "*"], credentials: true} });
+server.applyMiddleware({ app, cors: { origin: ["http://localhost:3000", "http://localhost:8081", "*"], credentials: true } });
 const httpServer = http.createServer(app);
 server.installSubscriptionHandlers(httpServer);
 
-(async() => {
+(async () => {
   await new Promise(resolve => httpServer.listen(process.env.PORT, resolve));
-  console.log(`🚀 Server ready at http://localhost:${process.env.PORT}${server.graphqlPath}`);
-  console.log(`🚀 Subscriptions ready at ws://localhost:${process.env.PORT}${server.subscriptionsPath}`);
+  console.log(`🚀 Server ready at http://${process.env.DOMAIN}${server.graphqlPath}`);
+  console.log(`🚀 Subscriptions ready at ws://${process.env.DOMAIN}${server.subscriptionsPath}`);
   return { server, app, httpServer };
 })()
 
