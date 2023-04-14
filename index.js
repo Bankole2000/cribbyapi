@@ -145,7 +145,7 @@ const server = new ApolloServer({
   // playground: false,
 });
 
-server.applyMiddleware({ app, cors: {origin: ["http://localhost:3000", "http://localhost:8081"], credentials: true} });
+server.applyMiddleware({ app, cors: {origin: ["http://localhost:3000", "http://localhost:8081", "*"], credentials: true} });
 const httpServer = http.createServer(app);
 server.installSubscriptionHandlers(httpServer);
 
@@ -168,3 +168,11 @@ app.get("/", (req, res) => {
     graphQLLocal: "http://localhost:4000/graphql",
   });
 });
+
+app.get('/books', async (req, res) => {
+  const books = require('./data/books.json');
+  res.status(200).json({
+    message: "Get Books Endpoint is working",
+    items: books
+  })
+})

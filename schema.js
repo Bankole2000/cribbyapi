@@ -12,7 +12,8 @@ module.exports = gql`
     """
     users: [User]
     me: User
-    listings(id: ID, uuid: String, title: String): [Listing] @requiresLogin
+    listings(id: ID, uuid: String, title: String): [Listing] 
+    searchListings(location: String, type: String, countryCode: CountryCode, currency: CurrencyCode): [Listing]
     currencies: [Currency]
     countryByCode(countryCode: String): Country
     countries(

@@ -1,7 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient({});
-const {deleteFiles} = require("../utils/fileHandlers");
+const { deleteFiles } = require("../utils/fileHandlers");
 
 const { DataSource } = require("apollo-datasource");
 
@@ -10,7 +10,7 @@ class ListingAPI extends DataSource {
     super();
   }
 
-  initialize(config) {}
+  initialize(config) { }
 
   async getListings(args) {
     const listings = await prisma.listing.findMany({
@@ -26,13 +26,70 @@ class ListingAPI extends DataSource {
             rule: true,
           },
         },
-        images: true, 
+        images: true,
         amenities: true,
       },
     });
     return listings;
   }
-
+  async searchListings(args) {
+    const { location, type, countryCode } = args
+    const listings = await prisma.listing.findMany({
+      where: {
+        OR: [
+          {
+            locationCity: {
+              contains: location,
+              mode: 'insensitive',
+            }
+          },
+          {
+            locationState: {
+              contains: location,
+              mode: 'insensitive'
+            }
+          },
+          {
+            stateName: {
+              contains: location,
+              mode: 'insensitive'
+            }
+          },
+          {
+            streetAddress: {
+              contains: location,
+              mode: 'insensitive'
+            }
+          }
+        ],
+        AND: [
+          {
+            locationCountry: {
+              contains: countryCode,
+              mode: 'insensitive'
+            },
+            listingPurpose: {
+              equals: type
+            }
+          }
+        ]
+      },
+      include: {
+        baseCurrency: true,
+        owner: {
+          include: {
+            profile: true,
+          }
+        },
+        amenities: true,
+        images: true,
+        houseRules: true,
+        reviews: true,
+        bookings: true
+      }
+    })
+    return listings
+  }
   async createListing(args) {
     const { uuid, listing } = args;
 
@@ -93,7 +150,7 @@ class ListingAPI extends DataSource {
 
   async getHouseRules(searchText) {
     let houseRules;
-    if(!searchText){
+    if (!searchText) {
       houseRules = await prisma.houseRule.findMany({
         include: {
           listings: true,
@@ -109,21 +166,21 @@ class ListingAPI extends DataSource {
               contains: searchText,
               mode: "insensitive"
             }
-          }, 
+          },
           {
             description: {
-              contains: searchText, 
+              contains: searchText,
               mode: 'insensitive'
             }
-          }, 
+          },
           {
             code: {
-              contains: searchText, 
+              contains: searchText,
               mode: 'insensitive'
             }
           }
         ]
-      }, 
+      },
       include: {
         listings: true
       }
@@ -206,16 +263,16 @@ class ListingAPI extends DataSource {
     const listing = await prisma.listing.findUnique({
       where: {
         uuid
-      }, 
+      },
       include: {
         images: true
       }
     });
-    if(listing.images.length){
+    if (listing.images.length) {
       const oldImage = listing.images.find(image => image.index == 0);
-      if(oldImage){
+      if (oldImage) {
         listingImage = await prisma.listingImage.update({
-          where: {id: oldImage.id}, 
+          where: { id: oldImage.id },
           data: imageData
         })
         return listingImage
@@ -225,58 +282,58 @@ class ListingAPI extends DataSource {
       data: {
         ...imageData,
         listing: {
-          connect: {uuid}
+          connect: { uuid }
         }
-      } 
+      }
     })
     return listingImage
   }
-  async addListingImage(uuid, imageData){
+  async addListingImage(uuid, imageData) {
     const listingImage = await prisma.listingImage.create({
       data: {
         ...imageData,
         listing: {
-          connect: {uuid}
+          connect: { uuid }
         }
-      } 
+      }
     })
     return listingImage
   }
-  async updateListingImage( imageUUID, imageData){
+  async updateListingImage(imageUUID, imageData) {
     const listingImage = await prisma.listingImage.findUnique({
       where: {
         uuid: imageUUID
       }
     })
-    if(!listingImage){
+    if (!listingImage) {
       throw new Error("No listing Image with that UUID");
     }
     const updatedImage = await prisma.listingImage.update({
-      data: {...imageData}, 
+      data: { ...imageData },
       where: {
         uuid: imageUUID
       }
     })
     return updatedImage
   }
-  async deleteListingImage(listingUUID, imageUUID){
+  async deleteListingImage(listingUUID, imageUUID) {
     const imageToDelete = await prisma.listingImage.findUnique({
       where: {
         uuid: imageUUID
       }
     })
-    if(!imageToDelete){
+    if (!imageToDelete) {
       throw new Error("No Image with that UUID")
     }
     const deletedImage = await prisma.listingImage.delete({
       where: {
         uuid: imageUUID
-      }, 
+      },
       select: {
         index: true
       }
     })
-    
+
     await prisma.listingImage.updateMany({
       where: {
         AND: [
@@ -284,7 +341,7 @@ class ListingAPI extends DataSource {
             index: {
               gt: deletedImage.index
             }
-          }, 
+          },
           {
             listing: {
               is: {
@@ -293,22 +350,22 @@ class ListingAPI extends DataSource {
             }
           }
         ]
-      }, 
+      },
       data: {
         index: {
           decrement: 1
         }
       }
     })
-    const {images: updatedImages} = await prisma.listing.findUnique({
+    const { images: updatedImages } = await prisma.listing.findUnique({
       where: {
         uuid: listingUUID
-      }, 
+      },
       select: {
         images: true,
       }
     })
-    return {updatedImages, imageToDelete}
+    return { updatedImages, imageToDelete }
   }
 }
 

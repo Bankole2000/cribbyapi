@@ -1,7 +1,9 @@
 const currencyObject = require("../data/currency.json");
+const countyCodeToName = require('../data/countryISO2ToName.json');
+const stateArray = require('../data/states.json');
 const authUtils = require("../utils/auth");
 const validators = require("../utils/validators");
-const {checkOrCreateListingImagePath, createResizedImage, storeUpload, deleteFiles} = require("../utils/fileHandlers");
+const { checkOrCreateListingImagePath, createResizedImage, storeUpload, deleteFiles } = require("../utils/fileHandlers");
 const { createWriteStream, mkdir } = require("fs");
 const { AuthenticationError } = require("apollo-server-express");
 const { prisma } = require(".prisma/client");
@@ -385,13 +387,25 @@ module.exports = {
     info
   ) => {
     const { uuid } = user;
-    const { baseCurrency: currencyCode } = listing;
+    const { baseCurrency: currencyCode, locationCountry: countryCode, locationState: stateCode } = listing;
+    if (countryCode) {
+      listing.countryName = countyCodeToName[countryCode];
+    }
+    if (stateCode) {
+      const statesOfCountry = stateArray.filter(state => state.country_code == countryCode);
+      const specificState = statesOfCountry.find(state => state.state_code == stateCode);
+      if (specificState) {
+        listing.stateName = specificState.name
+      }
+    }
+
     if (!currencyCode) {
       throw new Error("Listing requires a base currency");
     }
     if (!currencyObject[currencyCode]) {
       throw new Error("Invalid Currency");
     }
+
     const {
       symbol,
       name,
@@ -444,7 +458,7 @@ module.exports = {
       }
     }
     const newListing = await dataSources.listingAPI.createListing({ uuid, listing });
-    pubsub.publish('LISTINGADDED', {listingAdded : newListing});
+    pubsub.publish('LISTINGADDED', { listingAdded: newListing });
     return newListing;
   },
   updateListing: async (
@@ -470,8 +484,21 @@ module.exports = {
     ) {
       throw new Error("Listing Title Cannot be empty");
     }
+    if (updateData.locationCountry) {
+      updateData.countryName = countyCodeToName[updateData.locationCountry];
+    }
+    if (updateData.locationState) {
+      const { locationCountry: countryCode, locationState: stateCode } = updateData;
+      const statesOfCountry = stateArray.filter(state => state.country_code == countryCode);
+      const specificState = statesOfCountry.find(state => state.state_code == stateCode);
+      if (specificState) {
+        updateData.stateName = specificState.name
+      }
+    }
     if (updateData.baseCurrency) {
       const { baseCurrency: currencyCode } = updateData;
+
+
       if (!currencyCode) {
         throw new Error("Listing requires a base currency");
       }
@@ -540,7 +567,7 @@ module.exports = {
       uuid,
       updateData,
     });
-    console.log({updatedListing});
+    console.log({ updatedListing });
     return updatedListing;
   },
   deleteListing: async (
@@ -578,21 +605,21 @@ module.exports = {
           categoryData,
         }
       );
-      pubsub.publish('AMENITYCATEGORYADDED', {amenityCategoryAdded: updatedAmenityCategory})
+      pubsub.publish('AMENITYCATEGORYADDED', { amenityCategoryAdded: updatedAmenityCategory })
       return updatedAmenityCategory;
     }
     amenityCategory = await dataSources.amenityAPI.addAmenityCategory(
       categoryData
     );
-    pubsub.publish('AMENITYCATEGORYADDED', {amenityCategoryAdded: amenityCategory})
+    pubsub.publish('AMENITYCATEGORYADDED', { amenityCategoryAdded: amenityCategory })
     return amenityCategory;
   },
-  deleteAmenityCategory: async (parent, args, {dataSources}, info) => {
+  deleteAmenityCategory: async (parent, args, { dataSources }, info) => {
     try {
       let deletedCategory = await dataSources.amenityAPI.deleteAmenityCategory(args);
       return deletedCategory
     } catch (err) {
-      console.log({err});
+      console.log({ err });
       throw new Error("Unable to delete Category")
     }
   },
@@ -615,14 +642,14 @@ module.exports = {
         id: Number(id),
         amenityData,
       });
-      pubsub.publish('AMENITYADDED', { amenityAdded: updatedAmenity});
+      pubsub.publish('AMENITYADDED', { amenityAdded: updatedAmenity });
       return updatedAmenity;
     }
     const newAmenity = await dataSources.amenityAPI.addAmenity(amenityData);
-    pubsub.publish('AMENITYADDED', { amenityAdded: newAmenity});
+    pubsub.publish('AMENITYADDED', { amenityAdded: newAmenity });
     return newAmenity;
   },
-  deleteAmenity: async (parent, args, {dataSources}, info) => {
+  deleteAmenity: async (parent, args, { dataSources }, info) => {
     const deletedAmenity = await dataSources.amenityAPI.deleteAmenity(args);
     return deletedAmenity
   },
@@ -646,13 +673,13 @@ module.exports = {
         id: Number(id),
         houseRuleData,
       });
-      pubsub.publish('HOUSERULEADDED', {houseRuleAdded: updatedHouseRule})
+      pubsub.publish('HOUSERULEADDED', { houseRuleAdded: updatedHouseRule })
       return updatedHouseRule;
     }
     const newHouseRule = await dataSources.listingAPI.addHouseRule(
       houseRuleData
     );
-    pubsub.publish('HOUSERULEADDED', {houseRuleAdded: newHouseRule})
+    pubsub.publish('HOUSERULEADDED', { houseRuleAdded: newHouseRule })
     return newHouseRule;
   },
   deleteHouseRule: async (parent, { houseRuleId }, { dataSources }, info) => {
@@ -675,9 +702,9 @@ module.exports = {
     pubsub.publish('HOBBYADDED', { hobbyAdded: hobby })
     return hobby;
   },
-  deleteHobby: async (parent, args, {dataSources}, info) => {
+  deleteHobby: async (parent, args, { dataSources }, info) => {
     // console.log(args);
-    const deletedHobby = await dataSources.hobbyAPI.deleteHobby(args); 
+    const deletedHobby = await dataSources.hobbyAPI.deleteHobby(args);
     return deletedHobby
   },
   toggleListingPublishedStatus: async (
@@ -719,31 +746,31 @@ module.exports = {
       return updatedListing;
     }
   },
-  setListingFeaturedImage: async(parent, { file, listingUUID, title, description }, {dataSources}, info) => {
+  setListingFeaturedImage: async (parent, { file, listingUUID, title, description }, { dataSources }, info) => {
     const { createReadStream, filename, mimetype } = await file;
-    if(!validators.isValidImage(mimetype)){
+    if (!validators.isValidImage(mimetype)) {
       throw new Error("Invalid File Type")
-    } 
+    }
     const listing = await dataSources.listingAPI.getListingByUUID(listingUUID);
-    if(!listing){
+    if (!listing) {
       throw new Error("No Listing with this UUID");
     }
     console.log(listing.images);
-    if(listing.images.length){
+    if (listing.images.length) {
       const oldImage = listing.images.find(image => image.index == 0);
       // Delete old Images 
-      if(oldImage){
-        const {filePath, thumbnailPath, mediumPath, largePath} = oldImage;
+      if (oldImage) {
+        const { filePath, thumbnailPath, mediumPath, largePath } = oldImage;
         await deleteFiles(filePath, thumbnailPath, mediumPath, largePath);
       }
     }
-    
+
     const paths = await checkOrCreateListingImagePath(listingUUID, filename);
     // console.log(paths);
-    const stream =  createReadStream();
+    const stream = createReadStream();
     file = await storeUpload(stream, filename, mimetype, paths.filePath);
     const sizes = {
-      thumbnailPath : 150, 
+      thumbnailPath: 150,
       mediumPath: 640,
       largePath: 1200
     }
@@ -752,30 +779,30 @@ module.exports = {
       const size = sizeValues[i];
       await createResizedImage(file, sizes[size], paths[size]);
     }
-    listingImage = await dataSources.listingAPI.setListingFeaturedImage(listingUUID, {index: 0, filename: file.filename, title, description, ...paths});
-    
-    return {title: listingImage.title, description: listingImage.description, index: listingImage.index, image: {...listingImage}}
+    listingImage = await dataSources.listingAPI.setListingFeaturedImage(listingUUID, { index: 0, filename: file.filename, title, description, ...paths });
+
+    return { title: listingImage.title, description: listingImage.description, index: listingImage.index, image: { ...listingImage } }
   },
-  addListingImage: async(parent, {file, listingUUID, title, description}, {dataSources}, info) => {
+  addListingImage: async (parent, { file, listingUUID, title, description }, { dataSources }, info) => {
     const { createReadStream, filename, mimetype } = await file;
-    if(!validators.isValidImage(mimetype)){
+    if (!validators.isValidImage(mimetype)) {
       throw new Error("Invalid File Type")
-    } 
+    }
     const listing = await dataSources.listingAPI.getListingByUUID(listingUUID);
-    if(!listing){
+    if (!listing) {
       throw new Error("No Listing with this UUID");
     }
     let index = 0;
-    if(listing.images.length){
+    if (listing.images.length) {
       const lastIndex = Math.max(...[...listing.images.map(image => image.index)])
       index = lastIndex + 1;
-      console.log({lastIndex});
+      console.log({ lastIndex });
     }
     const paths = await checkOrCreateListingImagePath(listingUUID, filename);
-    const stream =  createReadStream();
+    const stream = createReadStream();
     file = await storeUpload(stream, filename, mimetype, paths.filePath);
     const sizes = {
-      thumbnailPath : 150, 
+      thumbnailPath: 150,
       mediumPath: 640,
       largePath: 1200
     }
@@ -784,49 +811,49 @@ module.exports = {
       const size = sizeValues[i];
       await createResizedImage(file, sizes[size], paths[size]);
     }
-    if(index == 0){
-      listingImage = await dataSources.listingAPI.setListingFeaturedImage(listingUUID, {index, filename: file.filename, title, description, ...paths});
-      return {title: listingImage.title, description: listingImage.description, index: listingImage.index, image: {...listingImage}}
+    if (index == 0) {
+      listingImage = await dataSources.listingAPI.setListingFeaturedImage(listingUUID, { index, filename: file.filename, title, description, ...paths });
+      return { title: listingImage.title, description: listingImage.description, index: listingImage.index, image: { ...listingImage } }
     }
-    listingImage = await dataSources.listingAPI.addListingImage(listingUUID, {index, filename: file.filename, title, description, ...paths});
-    return {title: listingImage.title, description: listingImage.description, index: listingImage.index, image: {...listingImage}}
-  }, 
-  updateListingImageInfo: async(parent, {imageUUID, title, description}, {dataSources}, info) => {
-    const updatedImage = await dataSources.listingAPI.updateListingImage(imageUUID, {title, description});
-    return {title: updatedImage.title, description: updatedImage.description, index: updatedImage.index, image: {...updatedImage}};
+    listingImage = await dataSources.listingAPI.addListingImage(listingUUID, { index, filename: file.filename, title, description, ...paths });
+    return { title: listingImage.title, description: listingImage.description, index: listingImage.index, image: { ...listingImage } }
   },
-  deleteListingImage: async(parent, {listingUUID, imageUUID}, {dataSources}, info ) => {
-    const {updatedImages, imageToDelete} = await dataSources.listingAPI.deleteListingImage(listingUUID, imageUUID);
-    if(imageToDelete){
-      const {filePath, thumbnailPath, mediumPath, largePath} = imageToDelete;
+  updateListingImageInfo: async (parent, { imageUUID, title, description }, { dataSources }, info) => {
+    const updatedImage = await dataSources.listingAPI.updateListingImage(imageUUID, { title, description });
+    return { title: updatedImage.title, description: updatedImage.description, index: updatedImage.index, image: { ...updatedImage } };
+  },
+  deleteListingImage: async (parent, { listingUUID, imageUUID }, { dataSources }, info) => {
+    const { updatedImages, imageToDelete } = await dataSources.listingAPI.deleteListingImage(listingUUID, imageUUID);
+    if (imageToDelete) {
+      const { filePath, thumbnailPath, mediumPath, largePath } = imageToDelete;
       await deleteFiles(filePath, thumbnailPath, mediumPath, largePath);
     }
-    if(updatedImages && updatedImages.length){
+    if (updatedImages && updatedImages.length) {
       return updatedImages.map(image => {
-        return {title: image.title, description: image.description, index: image.index, image: {...image}}
+        return { title: image.title, description: image.description, index: image.index, image: { ...image } }
       })
     }
     return updatedImages;
-  }, 
-  addOrUpdateStateRequest: async(parent, {stateData}, {dataSources, pubsub}, info) => {
-    console.log({stateData});
+  },
+  addOrUpdateStateRequest: async (parent, { stateData }, { dataSources, pubsub }, info) => {
+    console.log({ stateData });
     const stateAddRequest = await dataSources.locationRequestAPI.addOrUpdateStateAddRequest(stateData);
-    pubsub.publish('STATEADDREQUESTADDED', {stateAddRequestAdded: stateAddRequest});
+    pubsub.publish('STATEADDREQUESTADDED', { stateAddRequestAdded: stateAddRequest });
     return stateAddRequest
-  }, 
-  addOrUpdateCityRequest: async(parent, {cityData}, {dataSources, pubsub}, info) => {
-    console.log({cityData});
+  },
+  addOrUpdateCityRequest: async (parent, { cityData }, { dataSources, pubsub }, info) => {
+    console.log({ cityData });
     const cityAddRequest = await dataSources.locationRequestAPI.addOrUpdateCityAddRequest(cityData)
-    pubsub.publish('CITYADDREQUESTADDED', {cityAddRequestAdded: cityAddRequest});
+    pubsub.publish('CITYADDREQUESTADDED', { cityAddRequestAdded: cityAddRequest });
     return cityAddRequest
-  }, 
-  deleteStateAddRequest: async(parent, {stateAddRequestId}, {dataSources}, info) => {
-    console.log({stateAddRequestId});
+  },
+  deleteStateAddRequest: async (parent, { stateAddRequestId }, { dataSources }, info) => {
+    console.log({ stateAddRequestId });
     const deletedStateAddRequest = await dataSources.locationRequestAPI.deleteStateAddRequest(stateAddRequestId)
     return deletedStateAddRequest
-  }, 
-  deleteCityAddRequest: async(parent, {cityAddRequestId}, {dataSources}, info) => {
-    console.log({cityAddRequestId});
+  },
+  deleteCityAddRequest: async (parent, { cityAddRequestId }, { dataSources }, info) => {
+    console.log({ cityAddRequestId });
     const deletedCityAddRequest = await dataSources.locationRequestAPI.deleteCityAddRequest(cityAddRequestId)
     return deletedCityAddRequest
   }
