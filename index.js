@@ -11,10 +11,12 @@ const pubsub = new PubSub();
 
 const cors = require("cors");
 
-app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:5501", "https://bankole2000.github.io", "http://localhost:8081"],
-  credentials: true
-}));
+app.use(cors(
+  //   {
+  //   origin: ["http://localhost:3000", "http://localhost:5501", "https://bankole2000.github.io", "http://localhost:8081", "*"],
+  //   credentials: true
+  // }
+));
 // app.use(
 //   cors({
 //     origin: "*",
