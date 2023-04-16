@@ -28,6 +28,7 @@ app.use(cookieParser());
 app.use('/uploads', express.static('uploads'))
 
 const authUtil = require("./utils/auth");
+const urlAPI = require("./datasources/urls");
 const UserAPI = require("./datasources/users");
 const HobbyAPI = require("./datasources/hobbies");
 const CurrencyAPI = require("./datasources/currencies");
@@ -55,12 +56,13 @@ const dataSources = () => ({
   locationAPI: new LocationAPI(),
   locationRequestAPI: new LocationRequestAPI(),
   amenityAPI: new AmenityAPI(),
+  urlAPI: new urlAPI()
 });
 
 const server = new ApolloServer({
   cors: {
-    origin: ['http://localhost:3000', "http://localhost:8081", "*"],
-    credentials: true
+    // origin: ['http://localhost:3000', "http://localhost:8081", "*"],
+    // credentials: true
   },
   typeDefs,
   resolvers,
@@ -148,7 +150,13 @@ const server = new ApolloServer({
   // playground: false,
 });
 
-server.applyMiddleware({ app, cors: { origin: ["http://localhost:3000", "http://localhost:8081", "*"], credentials: true } });
+server.applyMiddleware({
+  app, cors: {
+    origin: "*"
+    // ["http://localhost:3000", "http://localhost:8081", "*"]
+    , credentials: true
+  }
+});
 const httpServer = http.createServer(app);
 server.installSubscriptionHandlers(httpServer);
 
@@ -179,3 +187,7 @@ app.get('/books', async (req, res) => {
     items: books
   })
 })
+
+const handleShortenedURL = require('./controllers/urlController');
+
+app.get('/api/v1/url-shortener/:id', handleShortenedURL)

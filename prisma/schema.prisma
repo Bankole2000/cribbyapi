@@ -380,3 +380,12 @@ model StateAddRequest {
   longitude   Float?
   addedToData Boolean? @default(false)
 }
+
+model Url {
+  id          Int      @id @default(autoincrement())
+  originalUrl String   @unique
+  shortenedId String   @unique
+  clickCount  Int      @default(0)
+  lastVisited DateTime @default(now()) @updatedAt
+  createdAt   DateTime @default(now())
+}

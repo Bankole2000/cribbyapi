@@ -1,5 +1,9 @@
 const _ = require('lodash');
 
+const generateUniqueId = require('generate-unique-id');
+const { isValidURl } = require('../utils/validators');
+const baseURL = process.env.API_SERVER_URL
+
 module.exports = {
   users: (parent, args, context, info) => {
     return context.dataSources.userAPI.getAllUsers(args);
@@ -91,4 +95,30 @@ module.exports = {
   hobbies: (parent, args, { dataSources }, info) => {
     return dataSources.hobbyAPI.getHobbies(args);
   },
+  shortenURL: async (parent, { url }, { dataSources }, info) => {
+    // Check if it's a valid URL
+    if (!isValidURl(url)) {
+      throw new Error("Invalid URL");
+    }
+    // Check for the url in the database
+    const urlExists = await dataSources.urlAPI.getURLByName(url)
+    if (urlExists) {
+      return `${baseURL}/api/v1/url-shortener/${urlExists.shortenedId}`
+    }
+    // Generate Uniqie Id for URL
+    const uniqueID = generateUniqueId({
+      length: 6,
+      useLetters: true,
+      useNumbers: true,
+    })
+    const newlyStoredURL = await dataSources.urlAPI.storeNewURLAndShortcode(url, uniqueID);
+    if (newlyStoredURL) {
+      return `${baseURL}/api/v1/url-shortener/${newlyStoredURL.shortenedId}`
+    }
+    return "Couldn't find or store URL"
+  },
+  shortenedURLs: async (parent, { searchText }, { dataSources }, info) => {
+    const urls = await dataSources.urlAPI.getAllURLs(searchText)
+    return urls
+  }
 };

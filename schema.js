@@ -37,6 +37,8 @@ module.exports = gql`
     houseRules(searchText: String): [HouseRule]
     hobbies(title: String, description: String, emoticon: String, searchText: String): [Hobby]
     files: [File!]
+    shortenURL(url: String!): String
+  shortenedURLs(searchText: String): [ShortenedURL]
   }
 
   type Mutation {
@@ -87,6 +89,16 @@ module.exports = gql`
     deleteCityAddRequest(cityAddRequestId: ID): CityAddRequest
     updateListingImageInfo(imageUUID: String, title: String, description: String): ListingImage @requiresLogin
     deleteListingImage(listingUUID: String!, imageUUID: String): [ListingImage]
+    deleteURL(id: ID!): ShortenedURL
+  }
+
+  type ShortenedURL {
+    id: ID
+    originalUrl: String
+    shortenedId: String 
+    clickCount: Int
+    lastVisited: String
+    createdAt: String
   }
 
   type ImageFile {

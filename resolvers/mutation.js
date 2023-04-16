@@ -11,6 +11,17 @@ const nodemailer = require("nodemailer");
 const { emailMaker } = require("../utils/emailMaker");
 
 module.exports = {
+  deleteURL: async (parent, { id }, { dataSources }, info) => {
+    console.log({ id });
+    try {
+      const deletedUrl = await dataSources.urlAPI.deleteURL(id)
+      if (deletedUrl) {
+        return deletedUrl
+      }
+    } catch (err) {
+      console.log({ err });
+    }
+  },
   signUp: async (
     parent,
     { credentials },
